@@ -1,17 +1,8 @@
 import './App.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import BookingModal from './components/BookingModal'
-import AdminDashboard from './components/AdminDashboard'
 
 export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/" element={<MainPage />} />
-      </Routes>
-    </Router>
-  )
+  return <MainPage />
 }
 
 function MainPage() {
