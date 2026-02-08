@@ -1,15 +1,9 @@
 import * as admin from 'firebase-admin';
 
-// Initialize Firebase Admin SDK
-// In Cloud Functions, this is automatically initialized
-try {
-  if (!admin.apps || admin.apps.length === 0) {
-    admin.initializeApp();
-  }
-} catch (error) {
-  console.error('Firebase Admin SDK already initialized:', error.message);
-}
+// Firebase Admin SDK is automatically initialized in Cloud Functions runtime
+// No need to initialize it again
+const db = admin.firestore();
+const auth = admin.auth();
 
-export const db = admin.firestore();
-export const auth = admin.auth();
+export { db, auth };
 export default admin;
