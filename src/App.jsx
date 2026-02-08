@@ -19,7 +19,7 @@ export default function App() {
         <div className="hero-content">
           <h1>Manish Jawa</h1>
           <p className="hero-subtitle">Engineering Leader | AI/ML | Distributed Systems</p>
-          <p className="hero-desc">18+ years building high-impact systems at Meta, Amazon, Atlassian</p>
+          <p className="hero-desc">18+ years building high-impact systems at Meta, Amazon, and Flipkart</p>
           <div className="hero-cta">
             <a href="#contact" className="btn btn-primary">Let's Talk</a>
             <a href="mailto:jawa.manish@gmail.com" className="btn btn-secondary">Email</a>
@@ -57,15 +57,6 @@ export default function App() {
               <h3>Meta</h3>
               <p><strong>Software Engineering Manager</strong> • 2022 - Present</p>
               <p>3x revenue impact | Led 18 ICs | Mobile Ads Experience</p>
-            </div>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>Atlassian</h3>
-              <p><strong>Sr Engineering Manager</strong> • 2023 - 2024</p>
-              <p>1.5x productivity increase | Built observability + AI/LLM toolchain</p>
             </div>
           </div>
 
@@ -186,7 +177,6 @@ export default function App() {
         <p>Open to discussing engineering leadership and building great teams.</p>
         <div className="contact-links">
           <a href="mailto:jawa.manish@gmail.com" className="contact-btn">📧 Email</a>
-          <a href="tel:+14254060934" className="contact-btn">📱 +1-425-406-0934</a>
           <a href="https://linkedin.com/in/manishjawa" className="contact-btn" target="_blank">💼 LinkedIn</a>
         </div>
       </section>
