@@ -7,7 +7,7 @@ function getDb() {
   if (!admin.apps.length) {
     admin.initializeApp();
   }
-  return admin.firestore('default');
+  return admin.firestore();
 }
 
 function getAuth() {

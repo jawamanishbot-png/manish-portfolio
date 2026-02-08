@@ -7,8 +7,8 @@ function getDb() {
   if (!admin.apps.length) {
     admin.initializeApp();
   }
-  // Explicitly specify database name (default is "default")
-  return admin.firestore('default');
+  // Return Firestore instance (will use default database)
+  return admin.firestore();
 }
 
 export const createBooking = async (req, res) => {
