@@ -1,6 +1,20 @@
 import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import BookingModal from './components/BookingModal'
+import AdminDashboard from './components/AdminDashboard'
 
 export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/" element={<MainPage />} />
+      </Routes>
+    </Router>
+  )
+}
+
+function MainPage() {
   return (
     <div className="app">
       {/* Navigation */}
@@ -10,6 +24,7 @@ export default function App() {
           <div className="nav-links">
             <a href="#experience">Experience</a>
             <a href="#contact">Contact</a>
+            <a href="/admin" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Admin</a>
           </div>
         </div>
       </nav>
@@ -21,7 +36,7 @@ export default function App() {
           <p className="hero-subtitle">Engineering Leader | AI/ML | Distributed Systems</p>
           <p className="hero-desc">18+ years building high-impact systems at Meta, Amazon, and Flipkart</p>
           <div className="hero-cta">
-            <a href="#contact" className="btn btn-primary">Let's Talk</a>
+            <BookingModal />
             <a href="mailto:jawa.manish@gmail.com" className="btn btn-secondary">Email</a>
           </div>
         </div>

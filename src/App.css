@@ -55,6 +55,15 @@ body {
   color: #22c55e;
 }
 
+.nav-link-admin {
+  color: #888 !important;
+  font-size: 0.9rem;
+}
+
+.nav-link-admin:hover {
+  color: #22c55e !important;
+}
+
 /* Hero */
 .hero {
   min-height: 70vh;
