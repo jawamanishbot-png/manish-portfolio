@@ -17,7 +17,7 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Firebase Admin is initialized in index.js at module load
+    // Firebase Admin is initialized in index.js
     const db = admin.firestore();
 
     // Create booking record with pending status
