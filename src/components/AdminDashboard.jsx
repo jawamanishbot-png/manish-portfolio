@@ -11,7 +11,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
+  const [filter, setFilter] = useState('paid'); // paid, pending, approved, rejected, all
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [calEventUrl, setCalEventUrl] = useState('');
 
@@ -142,22 +142,28 @@ export default function AdminDashboard() {
 
       <div className="admin-filters">
         <button
+          className={`filter-btn ${filter === 'paid' ? 'active' : ''}`}
+          onClick={() => setFilter('paid')}
+        >
+          💰 Paid - Awaiting Review ({bookings.filter((b) => b.status === 'paid').length})
+        </button>
+        <button
           className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
           onClick={() => setFilter('pending')}
         >
-          Pending ({bookings.filter((b) => b.status === 'pending').length})
+          ⏳ Pending ({bookings.filter((b) => b.status === 'pending').length})
         </button>
         <button
           className={`filter-btn ${filter === 'approved' ? 'active' : ''}`}
           onClick={() => setFilter('approved')}
         >
-          Approved ({bookings.filter((b) => b.status === 'approved').length})
+          ✓ Approved ({bookings.filter((b) => b.status === 'approved').length})
         </button>
         <button
           className={`filter-btn ${filter === 'rejected' ? 'active' : ''}`}
           onClick={() => setFilter('rejected')}
         >
-          Rejected ({bookings.filter((b) => b.status === 'rejected').length})
+          ✕ Rejected ({bookings.filter((b) => b.status === 'rejected').length})
         </button>
         <button
           className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
@@ -198,7 +204,7 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              {booking.status === 'pending' && (
+              {(booking.status === 'pending' || booking.status === 'paid') && (
                 <div className="booking-card-actions">
                   <button
                     className="btn btn-success"

@@ -1,12 +1,8 @@
-import { useState, useRef } from 'react';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { getStripe } from '../config/stripe';
-import { createBooking, confirmBooking } from '../services/api';
+import { useState } from 'react';
+import { createBooking } from '../services/api';
 import './BookingForm.css';
 
-function BookingFormContent() {
-  const stripe = useStripe();
-  const elements = useElements();
+export default function BookingForm() {
   const [email, setEmail] = useState('');
   const [context, setContext] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,34 +16,17 @@ function BookingFormContent() {
     setLoading(true);
 
     try {
-      // Step 1: Create booking in Firebase and get payment intent
-      const { bookingId, clientSecret } = await createBooking(email, context);
+      // Create booking and get Stripe Checkout URL
+      const { checkout_url } = await createBooking(email, context);
 
-      // Step 2: Confirm payment with Stripe
-      const cardElement = elements.getElement(CardElement);
-      const { paymentIntent, error: stripeError } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: { email },
-        },
-      });
-
-      if (stripeError) {
-        throw new Error(stripeError.message);
+      // Redirect to Stripe Checkout
+      if (checkout_url) {
+        window.location.href = checkout_url;
+      } else {
+        throw new Error('Failed to get checkout URL');
       }
-
-      // Step 3: Confirm booking in Firebase
-      await confirmBooking(bookingId, paymentIntent.id);
-
-      setSuccess(true);
-      setSuccessMessage(
-        'Payment successful! Your booking request has been submitted. Manish will review it and send you a Cal.com scheduling link within 24 hours.'
-      );
-      setEmail('');
-      setContext('');
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -56,7 +35,7 @@ function BookingFormContent() {
     return (
       <div className="booking-success">
         <div className="success-icon">✓</div>
-        <h3>Booking Request Submitted</h3>
+        <h3>Redirecting to Payment</h3>
         <p>{successMessage}</p>
       </div>
     );
@@ -90,36 +69,19 @@ function BookingFormContent() {
         />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="card">Card Details *</label>
-        <div className="stripe-element">
-          <CardElement id="card" disabled={loading} />
-        </div>
-      </div>
-
       {error && <div className="error-message">{error}</div>}
 
       <button
         type="submit"
         className="btn btn-primary btn-block"
-        disabled={!stripe || !elements || loading}
+        disabled={loading}
       >
-        {loading ? 'Processing...' : 'Book Call ($100 USD)'}
+        {loading ? 'Redirecting...' : 'Book Call ($100 USD)'}
       </button>
 
       <p className="form-note">
-        💳 Your payment is secure and processed by Stripe. We never store your full card details.
+        💳 Your payment is secure and processed by Stripe. You'll be redirected to our secure checkout.
       </p>
     </form>
-  );
-}
-
-export default function BookingForm() {
-  const stripePromise = getStripe();
-
-  return (
-    <Elements stripe={stripePromise}>
-      <BookingFormContent />
-    </Elements>
   );
 }

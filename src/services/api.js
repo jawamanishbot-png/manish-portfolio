@@ -1,28 +1,13 @@
 const API_BASE = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 
 /**
- * Create a booking and get Stripe payment intent
+ * Create a booking and get Stripe Checkout Session URL
  */
 export const createBooking = async (email, context) => {
   const res = await fetch('/api/bookings/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, context }),
-  });
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-  return res.json();
-};
-
-/**
- * Confirm payment and finalize booking
- */
-export const confirmBooking = async (bookingId, paymentIntentId) => {
-  const res = await fetch('/api/bookings/confirm', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ bookingId, paymentIntentId }),
   });
   if (!res.ok) {
     throw new Error(await res.text());

@@ -26,19 +26,51 @@ export default async function handler(req, res) {
 
   try {
     switch (event.type) {
-      case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object;
-        console.log(`Payment succeeded: ${paymentIntent.id}`);
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        console.log(`Checkout session completed: ${session.id}`);
+
+        // Find booking by stripe_session_id
+        const bookingsSnapshot = await db.collection('bookings')
+          .where('stripe_session_id', '==', session.id)
+          .get();
+
+        if (!bookingsSnapshot.empty) {
+          const bookingRef = bookingsSnapshot.docs[0].ref;
+          
+          // Only update if payment was successful
+          if (session.payment_status === 'paid') {
+            await bookingRef.update({
+              payment_status: 'paid',
+              status: 'paid', // Show as paid, awaiting admin approval
+              stripe_session_id: session.id,
+              payment_intent_id: session.payment_intent,
+              paid_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+            console.log(`Booking ${bookingsSnapshot.docs[0].id} marked as paid`);
+          }
+        } else {
+          console.warn(`No booking found for session ${session.id}`);
+        }
+        break;
+      }
+
+      case 'checkout.session.async_payment_succeeded': {
+        const session = event.data.object;
+        console.log(`Async payment succeeded for session: ${session.id}`);
 
         const bookingsSnapshot = await db.collection('bookings')
-          .where('payment_intent_id', '==', paymentIntent.id)
+          .where('stripe_session_id', '==', session.id)
           .get();
 
         if (!bookingsSnapshot.empty) {
           const bookingRef = bookingsSnapshot.docs[0].ref;
           await bookingRef.update({
-            payment_status: 'succeeded',
-            payment_id: paymentIntent.id,
+            payment_status: 'paid',
+            status: 'paid',
+            stripe_session_id: session.id,
+            payment_intent_id: session.payment_intent,
             paid_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
@@ -46,19 +78,19 @@ export default async function handler(req, res) {
         break;
       }
 
-      case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object;
-        console.log(`Payment failed: ${paymentIntent.id}`);
+      case 'checkout.session.async_payment_failed': {
+        const session = event.data.object;
+        console.log(`Async payment failed for session: ${session.id}`);
 
         const bookingsSnapshot = await db.collection('bookings')
-          .where('payment_intent_id', '==', paymentIntent.id)
+          .where('stripe_session_id', '==', session.id)
           .get();
 
         if (!bookingsSnapshot.empty) {
           const bookingRef = bookingsSnapshot.docs[0].ref;
           await bookingRef.update({
             payment_status: 'failed',
-            payment_error: paymentIntent.last_payment_error?.message || 'Payment failed',
+            payment_error: 'Async payment failed',
             updated_at: new Date().toISOString(),
           });
         }

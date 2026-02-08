@@ -20,22 +20,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: 10000,
-      currency: 'usd',
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Consultation with Manish Jawa',
+              description: 'Engineering Leadership & Advisory Session',
+            },
+            unit_amount: 10000, // $100 in cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.VITE_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.VITE_APP_URL}/checkout/cancel`,
+      customer_email: email,
       metadata: {
         email,
         context,
       },
     });
 
+    // Create booking record with pending status
     const bookingRef = db.collection('bookings').doc();
     await bookingRef.set({
       id: bookingRef.id,
       email,
       context,
       status: 'pending',
-      payment_intent_id: paymentIntent.id,
+      stripe_session_id: session.id,
       payment_status: 'pending',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -43,8 +61,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       bookingId: bookingRef.id,
-      clientSecret: paymentIntent.client_secret,
-      amount: paymentIntent.amount,
+      session_id: session.id,
+      checkout_url: session.url,
     });
   } catch (error) {
     console.error('Error creating booking:', error);
