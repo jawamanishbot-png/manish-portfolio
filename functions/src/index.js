@@ -3,14 +3,13 @@ import * as admin from 'firebase-admin';
 import express from 'express';
 import cors from 'cors';
 
-// Initialize Firebase Admin SDK FIRST, before importing other modules
-try {
+// Initialize Firebase Admin SDK at module load time
+// This must happen BEFORE importing other modules that use Firebase
+if (!admin.apps || admin.apps.length === 0) {
   admin.initializeApp();
-} catch (error) {
-  // Already initialized
-  console.log('Firebase Admin already initialized');
 }
 
+// Now safe to import handlers that use Firebase
 import { createBooking } from './bookings/create.js';
 import { approveBooking } from './bookings/approve.js';
 import { rejectBooking } from './bookings/reject.js';

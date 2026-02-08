@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 
 export const createBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -17,6 +17,7 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
+    // Firebase Admin is initialized in index.js at module load
     const db = admin.firestore();
 
     // Create booking record with pending status

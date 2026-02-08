@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 
 export const handleStripeWebhook = async (req, res) => {
   if (req.method !== 'POST') {
