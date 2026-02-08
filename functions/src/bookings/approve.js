@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
+const ADMIN_TOKEN = 'manish-portfolio-admin-2026';
 
 export const approveBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -14,23 +14,17 @@ export const approveBooking = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
-    const auth = admin.auth();
 
-    let decodedToken;
-    try {
-      decodedToken = await auth.verifyIdToken(token);
-    } catch (error) {
-      return res.status(401).json({ error: 'Invalid token' });
+    // Simple token verification (no Firebase)
+    if (token !== ADMIN_TOKEN) {
+      return res.status(403).json({ error: 'Invalid admin token' });
     }
 
-    if (decodedToken.email !== ADMIN_EMAIL) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    const { bookingId, calEventUrl, calLink } = req.body;
+    const calUrl = calEventUrl || calLink;
 
-    const { bookingId, calLink } = req.body;
-
-    if (!bookingId || !calLink) {
-      return res.status(400).json({ error: 'Missing bookingId or calLink' });
+    if (!bookingId || !calUrl) {
+      return res.status(400).json({ error: 'Missing bookingId or calEventUrl' });
     }
 
     // Update in Cloud Storage
@@ -42,7 +36,7 @@ export const approveBooking = async (req, res) => {
       const [data] = await file.download();
       const booking = JSON.parse(data.toString());
       booking.status = 'approved';
-      booking.cal_link = calLink;
+      booking.cal_link = calUrl;
       booking.approved_at = new Date().toISOString();
       booking.updated_at = new Date().toISOString();
       

@@ -19,13 +19,15 @@ export default function AdminDashboard({ onLogout }) {
   // Initialize with dummy user (already authenticated by parent component)
   useEffect(() => {
     setUser({ email: 'admin@manish-portfolio' }); // Placeholder user
-    fetchBookings();
+    const token = localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
+    fetchBookings(token);
   }, []);
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (token = null) => {
     try {
       setLoading(true);
-      const data = await getBookings();
+      const authToken = token || localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
+      const data = await getBookings(authToken);
       setBookings(data.bookings || []);
     } catch (err) {
       setError(`Failed to load bookings: ${err.message}`);
@@ -47,11 +49,12 @@ export default function AdminDashboard({ onLogout }) {
     }
 
     try {
-      await approveBooking(null, booking.id, calEventUrl);
+      const token = localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
+      await approveBooking(token, booking.id, calEventUrl);
       alert('Booking approved! User will receive the Cal.com link via email.');
       setSelectedBooking(null);
       setCalEventUrl('');
-      await fetchBookings();
+      await fetchBookings(token);
     } catch (err) {
       alert(`Failed to approve booking: ${err.message}`);
     }
@@ -63,9 +66,10 @@ export default function AdminDashboard({ onLogout }) {
     }
 
     try {
-      await rejectBooking(null, booking.id);
+      const token = localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
+      await rejectBooking(token, booking.id);
       alert('Booking rejected.');
-      await fetchBookings();
+      await fetchBookings(token);
     } catch (err) {
       alert(`Failed to reject booking: ${err.message}`);
     }

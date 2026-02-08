@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
+const ADMIN_TOKEN = 'manish-portfolio-admin-2026';
 
 export const rejectBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -14,17 +14,10 @@ export const rejectBooking = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
-    const auth = admin.auth();
 
-    let decodedToken;
-    try {
-      decodedToken = await auth.verifyIdToken(token);
-    } catch (error) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    if (decodedToken.email !== ADMIN_EMAIL) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Simple token verification (no Firebase)
+    if (token !== ADMIN_TOKEN) {
+      return res.status(403).json({ error: 'Invalid admin token' });
     }
 
     const { bookingId } = req.body;

@@ -12,6 +12,7 @@ export default function AdminAuth() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (token === ADMIN_TOKEN) {
+      localStorage.setItem('adminToken', token);
       setIsAuthenticated(true);
       setToken('');
       setError('');
