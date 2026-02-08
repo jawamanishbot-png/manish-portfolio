@@ -15,8 +15,12 @@ export const listBookings = async (req, res) => {
 
     const token = authHeader.substring('Bearer '.length);
 
-    // Simple token verification (no Firebase)
-    if (token !== ADMIN_TOKEN) {
+    // Accept both static token and session tokens from Google OAuth
+    // Session tokens start with 'session_'
+    const isStaticToken = token === ADMIN_TOKEN;
+    const isSessionToken = token.startsWith('session_');
+    
+    if (!isStaticToken && !isSessionToken) {
       return res.status(403).json({ error: 'Invalid admin token' });
     }
 
