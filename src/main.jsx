@@ -3,14 +3,14 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
-import AdminDashboard from './components/AdminDashboard.jsx'
+import AdminAuth from './components/AdminAuth.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Router>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={<AdminAuth />} />
       </Routes>
     </Router>
   </StrictMode>,

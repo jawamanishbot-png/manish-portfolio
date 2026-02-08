@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { auth } from '../config/firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getBookings, approveBooking, rejectBooking } from '../services/api';
 import './AdminDashboard.css';
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'jawa.manish@gmail.com';
+// Get a token from localStorage for API calls
+function getAdminToken() {
+  return localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
+}
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onLogout }) {
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,31 +16,16 @@ export default function AdminDashboard() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [calEventUrl, setCalEventUrl] = useState('');
 
-  // Check if user is already logged in
+  // Initialize with dummy user (already authenticated by parent component)
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
-        // Verify user is Manish
-        if (firebaseUser.email !== ADMIN_EMAIL) {
-          setError(`Access denied. Only ${ADMIN_EMAIL} can access this dashboard.`);
-          await signOut(auth);
-          return;
-        }
-        setUser(firebaseUser);
-        await fetchBookings(firebaseUser);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
+    setUser({ email: 'admin@manish-portfolio' }); // Placeholder user
+    fetchBookings();
   }, []);
 
-  const fetchBookings = async (firebaseUser) => {
+  const fetchBookings = async () => {
     try {
       setLoading(true);
-      const token = await firebaseUser.getIdToken();
-      const data = await getBookings(token);
+      const data = await getBookings();
       setBookings(data.bookings || []);
     } catch (err) {
       setError(`Failed to load bookings: ${err.message}`);
@@ -48,29 +34,10 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      setError(null);
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
-      if (result.user.email !== ADMIN_EMAIL) {
-        setError(`Access denied. Only ${ADMIN_EMAIL} can access this dashboard.`);
-        await signOut(auth);
-      }
-    } catch (err) {
-      setError(`Login failed: ${err.message}`);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      setBookings([]);
-    } catch (err) {
-      setError(`Logout failed: ${err.message}`);
-    }
+  const handleLogoutClick = () => {
+    setUser(null);
+    setBookings([]);
+    onLogout?.();
   };
 
   const handleApprove = async (booking) => {
@@ -80,12 +47,11 @@ export default function AdminDashboard() {
     }
 
     try {
-      const token = await user.getIdToken();
-      await approveBooking(token, booking.id, calEventUrl);
+      await approveBooking(null, booking.id, calEventUrl);
       alert('Booking approved! User will receive the Cal.com link via email.');
       setSelectedBooking(null);
       setCalEventUrl('');
-      await fetchBookings(user);
+      await fetchBookings();
     } catch (err) {
       alert(`Failed to approve booking: ${err.message}`);
     }
@@ -97,29 +63,13 @@ export default function AdminDashboard() {
     }
 
     try {
-      const token = await user.getIdToken();
-      await rejectBooking(token, booking.id);
+      await rejectBooking(null, booking.id);
       alert('Booking rejected.');
-      await fetchBookings(user);
+      await fetchBookings();
     } catch (err) {
       alert(`Failed to reject booking: ${err.message}`);
     }
   };
-
-  if (!user) {
-    return (
-      <div className="admin-container">
-        <div className="admin-login">
-          <h1>Admin Dashboard</h1>
-          <p>Sign in with Google to manage bookings</p>
-          <button className="btn btn-primary" onClick={handleGoogleLogin}>
-            Sign In with Google
-          </button>
-          {error && <div className="error-message">{error}</div>}
-        </div>
-      </div>
-    );
-  }
 
   const filteredBookings = bookings.filter((b) => {
     if (filter === 'all') return true;
@@ -131,8 +81,8 @@ export default function AdminDashboard() {
       <div className="admin-header">
         <h1>Booking Dashboard</h1>
         <div className="admin-user">
-          <span>{user.email}</span>
-          <button className="btn btn-secondary" onClick={handleLogout}>
+          <span>Admin</span>
+          <button className="btn btn-secondary" onClick={handleLogoutClick}>
             Logout
           </button>
         </div>
