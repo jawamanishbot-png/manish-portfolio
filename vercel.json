@@ -10,19 +10,6 @@
       "maxDuration": 30
     }
   },
-  "env": {
-    "VITE_FIREBASE_API_KEY": "@firebase_api_key",
-    "VITE_FIREBASE_AUTH_DOMAIN": "@firebase_auth_domain",
-    "VITE_FIREBASE_PROJECT_ID": "@firebase_project_id",
-    "VITE_FIREBASE_STORAGE_BUCKET": "@firebase_storage_bucket",
-    "VITE_FIREBASE_MESSAGING_SENDER_ID": "@firebase_messaging_sender_id",
-    "VITE_FIREBASE_APP_ID": "@firebase_app_id",
-    "FIREBASE_SERVICE_ACCOUNT_KEY": "@firebase_service_account_key",
-    "VITE_GOOGLE_CLIENT_ID": "@vite_google_client_id",
-    "GOOGLE_CLIENT_SECRET": "@google_client_secret",
-    "JWT_SECRET": "@jwt_secret",
-    "ADMIN_EMAILS": "@admin_emails"
-  },
   "public": false,
   "rewrites": [
     {
