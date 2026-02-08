@@ -8,7 +8,7 @@
  * - Admin approval workflow
  */
 
-const API_BASE = 'https://us-central1-manish-portfolio-bookings.cloudfunctions.net/api';
+const API_BASE = 'https://api-foyuhxzxaa-uc.a.run.app/api';
 
 async function testBookingSubmission() {
   console.log('\n📝 Test 1: Booking Submission');
