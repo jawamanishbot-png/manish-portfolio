@@ -34,7 +34,12 @@
   display: flex;
   justify-content: center;
   margin-bottom: 30px;
-  min-height: 50px;
+  min-height: 60px;
+}
+
+.google-button-container {
+  display: flex;
+  justify-content: center;
 }
 
 .loading-spinner {
@@ -43,7 +48,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 50px;
+  height: 60px;
 }
 
 .error-message {
