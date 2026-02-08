@@ -16,6 +16,8 @@ import { approveBooking } from './bookings/approve.js';
 import { rejectBooking } from './bookings/reject.js';
 import { listBookings } from './bookings/list.js';
 import { handleStripeWebhook } from './webhooks/stripe.js';
+import { testFirestore } from './bookings/test.js';
+import { diagnostic } from './bookings/diagnostic.js';
 
 const app = express();
 
@@ -28,6 +30,8 @@ app.get('/api/bookings/list', listBookings);
 app.post('/api/bookings/approve', approveBooking);
 app.post('/api/bookings/reject', rejectBooking);
 app.post('/api/webhooks/stripe', handleStripeWebhook);
+app.get('/api/test/firestore', testFirestore);
+app.get('/api/diagnostic', diagnostic);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

@@ -2,21 +2,6 @@ import admin from 'firebase-admin';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
 
-// Ensure Firebase Admin is initialized on first use
-function getDb() {
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
-  return admin.firestore();
-}
-
-function getAuth() {
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
-  return admin.auth();
-}
-
 export const rejectBooking = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -29,8 +14,7 @@ export const rejectBooking = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
-    const auth = getAuth();
-    const db = getDb();
+    const auth = admin.auth();
 
     let decodedToken;
     try {
@@ -49,13 +33,23 @@ export const rejectBooking = async (req, res) => {
       return res.status(400).json({ error: 'Missing bookingId' });
     }
 
-    const bookingRef = db.collection('bookings').doc(bookingId);
-    await bookingRef.update({
-      status: 'rejected',
-      rejected_at: new Date().toISOString(),
-    });
+    // Update in Cloud Storage
+    const storage = admin.storage();
+    const bucket = storage.bucket('manish-portfolio-bookings-bookings');
+    const file = bucket.file(`bookings/${bookingId}.json`);
 
-    return res.status(200).json({ success: true, message: 'Booking rejected' });
+    try {
+      const [data] = await file.download();
+      const booking = JSON.parse(data.toString());
+      booking.status = 'rejected';
+      booking.rejected_at = new Date().toISOString();
+      booking.updated_at = new Date().toISOString();
+      
+      await file.save(JSON.stringify(booking, null, 2));
+      return res.status(200).json({ success: true, message: 'Booking rejected' });
+    } catch (error) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
   } catch (error) {
     console.error('Error rejecting booking:', error);
     return res.status(500).json({ error: error.message });
