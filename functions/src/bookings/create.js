@@ -1,4 +1,4 @@
-import { db } from '../firebase-admin.js';
+import admin from 'firebase-admin';
 
 export const createBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -17,7 +17,9 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Create booking record with pending status (no Stripe)
+    const db = admin.firestore();
+
+    // Create booking record with pending status
     const bookingRef = db.collection('bookings').doc();
     await bookingRef.set({
       id: bookingRef.id,

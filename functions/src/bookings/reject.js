@@ -1,7 +1,6 @@
-import { db, auth } from '../firebase-admin.js';
-import { sendRejectionEmail } from '../email.js';
+import admin from 'firebase-admin';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jawa.manish@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
 
 export const rejectBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -15,6 +14,8 @@ export const rejectBooking = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
+    const auth = admin.auth();
+    const db = admin.firestore();
 
     let decodedToken;
     try {
@@ -33,31 +34,13 @@ export const rejectBooking = async (req, res) => {
       return res.status(400).json({ error: 'Missing bookingId' });
     }
 
-    const bookingDoc = await db.collection('bookings').doc(bookingId).get();
-    if (!bookingDoc.exists) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    const booking = bookingDoc.data();
-
-    try {
-      await sendRejectionEmail(booking.email);
-    } catch (emailError) {
-      console.error('Email send failed, but continuing:', emailError);
-    }
-
-    await db.collection('bookings').doc(bookingId).update({
+    const bookingRef = db.collection('bookings').doc(bookingId);
+    await bookingRef.update({
       status: 'rejected',
       rejected_at: new Date().toISOString(),
-      rejected_by: decodedToken.email,
-      updated_at: new Date().toISOString(),
     });
 
-    return res.status(200).json({
-      success: true,
-      message: 'Booking rejected and email sent',
-      bookingId,
-    });
+    return res.status(200).json({ success: true, message: 'Booking rejected' });
   } catch (error) {
     console.error('Error rejecting booking:', error);
     return res.status(500).json({ error: error.message });

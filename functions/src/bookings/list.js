@@ -1,6 +1,6 @@
-import { db, auth } from '../firebase-admin.js';
+import admin from 'firebase-admin';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jawa.manish@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
 
 export const listBookings = async (req, res) => {
   if (req.method !== 'GET') {
@@ -14,6 +14,8 @@ export const listBookings = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
+    const auth = admin.auth();
+    const db = admin.firestore();
 
     let decodedToken;
     try {

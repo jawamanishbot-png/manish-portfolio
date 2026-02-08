@@ -1,7 +1,6 @@
-import { db, auth } from '../firebase-admin.js';
-import { sendApprovalEmail } from '../email.js';
+import admin from 'firebase-admin';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jawa.manish@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
 
 export const approveBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -15,6 +14,8 @@ export const approveBooking = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
+    const auth = admin.auth();
+    const db = admin.firestore();
 
     let decodedToken;
     try {
@@ -27,44 +28,20 @@ export const approveBooking = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const { bookingId, calEventUrl } = req.body;
+    const { bookingId, calLink } = req.body;
 
-    if (!bookingId || !calEventUrl) {
-      return res.status(400).json({ error: 'Missing bookingId or calEventUrl' });
+    if (!bookingId || !calLink) {
+      return res.status(400).json({ error: 'Missing bookingId or calLink' });
     }
 
-    try {
-      new URL(calEventUrl);
-    } catch {
-      return res.status(400).json({ error: 'Invalid URL format' });
-    }
-
-    const bookingDoc = await db.collection('bookings').doc(bookingId).get();
-    if (!bookingDoc.exists) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    const booking = bookingDoc.data();
-
-    try {
-      await sendApprovalEmail(booking.email, calEventUrl);
-    } catch (emailError) {
-      console.error('Email send failed, but continuing:', emailError);
-    }
-
-    await db.collection('bookings').doc(bookingId).update({
+    const bookingRef = db.collection('bookings').doc(bookingId);
+    await bookingRef.update({
       status: 'approved',
-      cal_event_url: calEventUrl,
+      cal_link: calLink,
       approved_at: new Date().toISOString(),
-      approved_by: decodedToken.email,
-      updated_at: new Date().toISOString(),
     });
 
-    return res.status(200).json({
-      success: true,
-      message: 'Booking approved and email sent',
-      bookingId,
-    });
+    return res.status(200).json({ success: true, message: 'Booking approved' });
   } catch (error) {
     console.error('Error approving booking:', error);
     return res.status(500).json({ error: error.message });
