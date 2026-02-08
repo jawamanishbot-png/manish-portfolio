@@ -1,5 +1,15 @@
 import admin from 'firebase-admin';
 
+// Ensure Firebase Admin is initialized on first use
+function getDb() {
+  // In Cloud Functions, initializeApp() must be called exactly once
+  // Re-calling it will fail, so we check first
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  return admin.firestore();
+}
+
 export const createBooking = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -17,8 +27,7 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Firebase Admin is initialized in index.js
-    const db = admin.firestore();
+    const db = getDb();
 
     // Create booking record with pending status
     const bookingRef = db.collection('bookings').doc();

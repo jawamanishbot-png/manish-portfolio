@@ -1,6 +1,14 @@
 import Stripe from 'stripe';
 import admin from 'firebase-admin';
 
+// Ensure Firebase Admin is initialized on first use
+function getDb() {
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  return admin.firestore();
+}
+
 export const handleStripeWebhook = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -24,7 +32,7 @@ export const handleStripeWebhook = async (req, res) => {
   }
 
   try {
-    const db = admin.firestore();
+    const db = getDb();
 
     switch (event.type) {
       case 'checkout.session.completed': {

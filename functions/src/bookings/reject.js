@@ -2,6 +2,21 @@ import admin from 'firebase-admin';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
 
+// Ensure Firebase Admin is initialized on first use
+function getDb() {
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  return admin.firestore();
+}
+
+function getAuth() {
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  return admin.auth();
+}
+
 export const rejectBooking = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -14,8 +29,8 @@ export const rejectBooking = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
-    const auth = admin.auth();
-    const db = admin.firestore();
+    const auth = getAuth();
+    const db = getDb();
 
     let decodedToken;
     try {
