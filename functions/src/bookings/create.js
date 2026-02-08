@@ -17,10 +17,7 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Use Cloud Storage instead of Firestore
-    const storage = admin.storage();
-    const bucket = storage.bucket('manish-portfolio-bookings-bookings');
-    
+    const db = admin.firestore();
     const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const bookingData = {
       id: bookingId,
@@ -31,9 +28,7 @@ export const createBooking = async (req, res) => {
       updated_at: new Date().toISOString(),
     };
 
-    // Store in Cloud Storage
-    const file = bucket.file(`bookings/${bookingId}.json`);
-    await file.save(JSON.stringify(bookingData, null, 2));
+    await db.collection('bookings').doc(bookingId).set(bookingData);
 
     console.log(`Booking created: ${bookingId}`);
 

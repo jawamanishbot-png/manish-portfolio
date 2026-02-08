@@ -33,23 +33,21 @@ export const rejectBooking = async (req, res) => {
       return res.status(400).json({ error: 'Missing bookingId' });
     }
 
-    // Update in Cloud Storage
-    const storage = admin.storage();
-    const bucket = storage.bucket('manish-portfolio-bookings-bookings');
-    const file = bucket.file(`bookings/${bookingId}.json`);
+    const db = admin.firestore();
+    const docRef = db.collection('bookings').doc(bookingId);
+    const doc = await docRef.get();
 
-    try {
-      const [data] = await file.download();
-      const booking = JSON.parse(data.toString());
-      booking.status = 'rejected';
-      booking.rejected_at = new Date().toISOString();
-      booking.updated_at = new Date().toISOString();
-      
-      await file.save(JSON.stringify(booking, null, 2));
-      return res.status(200).json({ success: true, message: 'Booking rejected' });
-    } catch (error) {
+    if (!doc.exists) {
       return res.status(404).json({ error: 'Booking not found' });
     }
+
+    await docRef.update({
+      status: 'rejected',
+      rejected_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    return res.status(200).json({ success: true, message: 'Booking rejected' });
   } catch (error) {
     console.error('Error rejecting booking:', error);
     return res.status(500).json({ error: error.message });

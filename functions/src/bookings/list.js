@@ -27,24 +27,13 @@ export const listBookings = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Fetch bookings from Cloud Storage
-    const storage = admin.storage();
-    const bucket = storage.bucket('manish-portfolio-bookings-bookings');
-    const [files] = await bucket.getFiles({ prefix: 'bookings/' });
+    const db = admin.firestore();
+    const snapshot = await db.collection('bookings').orderBy('created_at', 'desc').get();
 
     const bookings = [];
-    for (const file of files) {
-      try {
-        const [data] = await file.download();
-        const booking = JSON.parse(data.toString());
-        bookings.push(booking);
-      } catch (e) {
-        console.error(`Error reading ${file.name}:`, e);
-      }
-    }
-
-    // Sort by created_at descending
-    bookings.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    snapshot.forEach((doc) => {
+      bookings.push(doc.data());
+    });
 
     return res.status(200).json({ bookings });
   } catch (error) {

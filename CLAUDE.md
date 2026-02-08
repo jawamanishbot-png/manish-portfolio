@@ -4,7 +4,7 @@
 
 Executive portfolio website for Manish Jawa with an integrated booking system. Users can view the portfolio and request consultation bookings; an admin panel allows approving/rejecting requests with email notifications.
 
-**Live stack:** React 19 + Vite 7 frontend, Firebase Cloud Functions backend, Cloud Storage for data, Firebase Auth for admin access, Nodemailer for emails, Cal.com for scheduling.
+**Live stack:** React 19 + Vite 7 frontend, Firebase Cloud Functions backend, Firestore for data, Firebase Auth for admin access, Nodemailer for emails, Cal.com for scheduling.
 
 ## Quick Start
 
@@ -104,7 +104,7 @@ npm run lint                   # ESLint
 
 - **Frontend:** React 19, React Router DOM 7, Vite 7, plain CSS (dark theme, no Tailwind)
 - **Backend:** Firebase Cloud Functions (Node 20), Express 4
-- **Database:** Firebase Cloud Storage (JSON files in `bookings/` bucket)
+- **Database:** Firestore (`bookings` collection, documents keyed by booking ID)
 - **Auth:** Firebase Auth + Google OAuth (admin only, restricted to `jawa.manish@gmail.com`)
 - **Email:** Nodemailer with Gmail SMTP
 - **Scheduling:** Cal.com integration (links sent in approval emails)
@@ -120,7 +120,7 @@ npm run lint                   # ESLint
 
 ### Backend (Cloud Functions)
 - **Pattern:** Express routes inside a single Firebase Cloud Function (`api`)
-- **Storage:** Booking data stored as individual JSON files in Cloud Storage bucket `manish-portfolio-bookings-bookings`
+- **Storage:** Booking data stored in Firestore `bookings` collection, one document per booking keyed by booking ID
 - **Auth flow:** Firebase ID token verification → admin email check
 - **Email templates:** HTML emails with inline styles in `functions/src/email.js`
 
@@ -147,8 +147,8 @@ There are **two backend implementations** — `functions/` (Firebase, production
 ### Legacy Stripe Code
 Stripe payment integration exists in the codebase but is **inactive**. The booking flow is now free (no payment). Stripe-related files (`src/config/stripe.js`, `api/webhooks/stripe.js`, `functions/src/webhooks/stripe.js`, `api/bookings/confirm.js`) are legacy and can be ignored or removed.
 
-### Storage Migration
-Bookings were migrated from Firestore to Cloud Storage. Some Firestore references may remain in code or docs. The current storage mechanism uses Cloud Storage JSON files.
+### Storage History
+Bookings were originally in Firestore, briefly migrated to Cloud Storage (JSON files), and have been **migrated back to Firestore** as the current production database. The `bookings` collection in Firestore is the single source of truth.
 
 ### Firebase Config is Hardcoded
 The frontend Firebase config in `src/config/firebase.js` is hardcoded (not from env vars) because Vite env vars weren't reliably available at build time. This is intentional.
