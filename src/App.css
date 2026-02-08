@@ -49,7 +49,6 @@ body {
   color: #aaa;
   text-decoration: none;
   transition: color 0.3s;
-  font-size: 0.9rem;
 }
 
 .nav-links a:hover {
@@ -58,17 +57,16 @@ body {
 
 /* Hero */
 .hero {
-  min-height: 80vh;
+  min-height: 70vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #000 0%, #111 100%);
   padding: 40px 20px;
   text-align: center;
 }
 
 .hero-content h1 {
-  font-size: 4rem;
+  font-size: 3.5rem;
   font-weight: 700;
   margin-bottom: 10px;
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
@@ -78,18 +76,15 @@ body {
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #22c55e;
   margin-bottom: 10px;
 }
 
 .hero-desc {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #aaa;
   margin-bottom: 30px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .hero-cta {
@@ -107,7 +102,6 @@ body {
   transition: all 0.3s;
   cursor: pointer;
   border: none;
-  font-size: 1rem;
 }
 
 .btn-primary {
@@ -128,23 +122,22 @@ body {
 
 .btn-secondary:hover {
   background-color: rgba(34, 197, 94, 0.1);
-  transform: translateY(-2px);
 }
 
 /* Stats */
 .stats {
   max-width: 1200px;
-  margin: 80px auto;
+  margin: 60px auto;
   padding: 0 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
 }
 
 .stat-card {
   background: #111;
   border: 1px solid #222;
-  padding: 30px;
+  padding: 25px;
   border-radius: 8px;
   text-align: center;
 }
@@ -157,64 +150,20 @@ body {
 
 .stat-card p {
   color: #aaa;
+  font-size: 0.9rem;
 }
 
 /* Sections */
 section {
   max-width: 1200px;
-  margin: 80px auto;
+  margin: 60px auto;
   padding: 0 20px;
 }
 
 section h2 {
-  font-size: 2.5rem;
-  margin-bottom: 40px;
+  font-size: 2.2rem;
+  margin-bottom: 35px;
   color: #fff;
-}
-
-/* About */
-.about p {
-  font-size: 1.1rem;
-  color: #ccc;
-  line-height: 1.8;
-  margin-bottom: 20px;
-}
-
-/* Companies */
-.company-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.company-card {
-  background: #111;
-  border: 1px solid #222;
-  padding: 25px;
-  border-radius: 8px;
-  border-left: 4px solid #22c55e;
-}
-
-.company-card h3 {
-  color: #22c55e;
-  margin-bottom: 5px;
-}
-
-.company-card p {
-  color: #aaa;
-  margin-bottom: 5px;
-  font-size: 0.95rem;
-}
-
-.company-card .date {
-  color: #666;
-  font-size: 0.85rem;
-  margin-bottom: 10px;
-}
-
-.company-card .highlight {
-  color: #22c55e;
-  font-weight: 600;
 }
 
 /* Experience Timeline */
@@ -234,7 +183,7 @@ section h2 {
 }
 
 .timeline-item {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   margin-left: 80px;
   position: relative;
 }
@@ -260,91 +209,58 @@ section h2 {
 .timeline-content h3 {
   color: #22c55e;
   margin-bottom: 5px;
+  font-size: 1.1rem;
 }
 
-.timeline-content .role {
-  color: #fff;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.timeline-content .date {
-  color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-}
-
-.timeline-content ul {
-  list-style: none;
-  margin-top: 10px;
-}
-
-.timeline-content li {
+.timeline-content p {
   color: #aaa;
-  margin-bottom: 8px;
-  padding-left: 20px;
-  position: relative;
+  font-size: 0.95rem;
+  margin: 5px 0;
 }
 
-.timeline-content li::before {
-  content: '▸';
-  position: absolute;
-  left: 0;
-  color: #22c55e;
+.timeline-content strong {
+  color: #fff;
 }
 
 /* Expertise */
 .expertise-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 
 .expertise-card {
   background: #111;
   border: 1px solid #222;
-  padding: 25px;
+  padding: 20px;
   border-radius: 8px;
-  text-align: center;
+  border-left: 4px solid #22c55e;
 }
 
 .expertise-card h3 {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
   color: #22c55e;
+  margin-bottom: 10px;
+  font-size: 1rem;
 }
 
 .expertise-card p {
   color: #aaa;
-  font-size: 0.95rem;
-}
-
-/* Patents */
-.patents ul {
-  list-style: none;
-}
-
-.patents li {
-  background: #111;
-  border-left: 4px solid #22c55e;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  color: #aaa;
+  font-size: 0.9rem;
 }
 
 /* Contact */
 .contact {
   text-align: center;
-  background: linear-gradient(135deg, #111 0%, #000 100%);
-  padding: 60px 20px;
+  background: #111;
+  padding: 50px 20px;
   border-radius: 8px;
+  border: 1px solid #222;
 }
 
 .contact p {
   color: #aaa;
-  margin-bottom: 30px;
-  font-size: 1.1rem;
+  margin-bottom: 25px;
+  font-size: 1rem;
 }
 
 .contact-links {
@@ -372,33 +288,29 @@ section h2 {
 /* Footer */
 .footer {
   text-align: center;
-  padding: 40px 20px;
+  padding: 30px 20px;
   color: #666;
   border-top: 1px solid #222;
-  margin-top: 80px;
-}
-
-.footer p {
-  margin: 5px 0;
+  margin-top: 60px;
+  font-size: 0.9rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .nav-links {
-    gap: 15px;
-    font-size: 0.8rem;
-  }
-
   .hero-content h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
 
   .hero-subtitle {
-    font-size: 1.2rem;
+    font-size: 1rem;
+  }
+
+  .hero-desc {
+    font-size: 0.9rem;
   }
 
   section h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .timeline::before {
@@ -411,6 +323,10 @@ section h2 {
 
   .timeline-marker {
     left: -30px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .contact-links {
