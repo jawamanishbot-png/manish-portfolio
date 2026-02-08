@@ -16,11 +16,14 @@ export default function AdminDashboard({ onLogout }) {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [calEventUrl, setCalEventUrl] = useState('');
 
-  // Initialize with dummy user (already authenticated by parent component)
+  // Initialize with authenticated user
   useEffect(() => {
-    setUser({ email: 'admin@manish-portfolio' }); // Placeholder user
-    const token = localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
-    fetchBookings(token);
+    const email = localStorage.getItem('adminEmail') || 'Admin';
+    setUser({ email }); // Get email from localStorage
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      fetchBookings(token);
+    }
   }, []);
 
   const fetchBookings = async (token = null) => {
