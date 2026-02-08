@@ -222,6 +222,78 @@ section h2 {
   color: #fff;
 }
 
+/* Patents & Publications */
+.patents {
+  background: #111;
+  padding: 40px 20px;
+  border-radius: 8px;
+  border: 1px solid #222;
+}
+
+.section-subtitle {
+  color: #aaa;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+  display: block;
+}
+
+.section-subtitle a {
+  color: #22c55e;
+  text-decoration: none;
+  border-bottom: 1px solid #22c55e;
+  transition: color 0.3s;
+}
+
+.section-subtitle a:hover {
+  color: #16a34a;
+}
+
+.patents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.patent-card {
+  background: #000;
+  border: 1px solid #222;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #22c55e;
+  transition: all 0.3s;
+}
+
+.patent-card:hover {
+  border-left-color: #16a34a;
+  background: #0a0a0a;
+}
+
+.patent-card h3 {
+  color: #fff;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.patent-meta {
+  color: #22c55e;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.citations {
+  color: #888;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.authors {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
 /* Expertise */
 .expertise-grid {
   display: grid;

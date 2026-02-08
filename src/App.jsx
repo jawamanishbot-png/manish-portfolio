@@ -34,7 +34,7 @@ export default function App() {
           <p>Years</p>
         </div>
         <div className="stat-card">
-          <h3>4</h3>
+          <h3>10</h3>
           <p>Patents</p>
         </div>
         <div className="stat-card">
@@ -93,6 +93,66 @@ export default function App() {
               <h3>Browserstack, Notify.io, Fireeye, VMware, Citrix</h3>
               <p>Senior roles in mobile security, virtualization, and ML systems</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Patents & Publications */}
+      <section className="patents">
+        <h2>Patents & Publications</h2>
+        <p className="section-subtitle">Google Scholar Profile: <a href="https://scholar.google.com/citations?user=Bh4CeJ8AAAAJ&hl=en" target="_blank">View Full Profile</a></p>
+        <div className="patents-grid">
+          <div className="patent-card">
+            <h3>Method and system for facilitating replacement of system calls</h3>
+            <p className="patent-meta">US Patent 9,111,087 (2015)</p>
+            <p className="citations">67 citations</p>
+            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+          </div>
+
+          <div className="patent-card">
+            <h3>System and method for acquiring data from an aircraft</h3>
+            <p className="patent-meta">US Patent App. 12/234,211 (2010)</p>
+            <p className="citations">45 citations</p>
+            <p className="authors">SP Eagleton, B Somasundram, S Bonkra, R Pynadath, M Jawa, ...</p>
+          </div>
+
+          <div className="patent-card">
+            <h3>Method and system for identifying and replacing system calls</h3>
+            <p className="patent-meta">US Patent 9,524,154 (2016)</p>
+            <p className="citations">38 citations</p>
+            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+          </div>
+
+          <div className="patent-card">
+            <h3>Method and system for facilitating replacement of system calls</h3>
+            <p className="patent-meta">US Patent 10,007,782 (2018)</p>
+            <p className="citations">10 citations</p>
+            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+          </div>
+
+          <div className="patent-card">
+            <h3>Static redirection for objective C</h3>
+            <p className="patent-meta">US Patent 9,189,622 (2015)</p>
+            <p className="citations">4 citations</p>
+            <p className="authors">M Jawa</p>
+          </div>
+
+          <div className="patent-card">
+            <h3>Method and system for facilitating replacement of function calls</h3>
+            <p className="patent-meta">US Patent 10,725,756 (2020)</p>
+            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+          </div>
+
+          <div className="patent-card">
+            <h3>Static redirection for objective C</h3>
+            <p className="patent-meta">US Patent 10,114,979 (2018)</p>
+            <p className="authors">M Jawa</p>
+          </div>
+
+          <div className="patent-card">
+            <h3>Method and system for facilitating replacement of system calls</h3>
+            <p className="patent-meta">US Patent 9,665,355 (2017)</p>
+            <p className="authors">M Jawa, H Tebeka, CF Newell</p>
           </div>
         </div>
       </section>
