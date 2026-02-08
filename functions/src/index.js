@@ -1,6 +1,16 @@
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 import express from 'express';
 import cors from 'cors';
+
+// Initialize Firebase Admin SDK FIRST, before importing other modules
+try {
+  admin.initializeApp();
+} catch (error) {
+  // Already initialized
+  console.log('Firebase Admin already initialized');
+}
+
 import { createBooking } from './bookings/create.js';
 import { approveBooking } from './bookings/approve.js';
 import { rejectBooking } from './bookings/reject.js';
