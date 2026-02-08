@@ -1,3 +1,9 @@
+// Initialize Firebase Admin SDK first (required before using any Firebase services)
+import admin from 'firebase-admin';
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 import * as functions from 'firebase-functions';
 import express from 'express';
 import cors from 'cors';
