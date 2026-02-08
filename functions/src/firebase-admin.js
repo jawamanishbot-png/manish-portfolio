@@ -2,8 +2,12 @@ import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
 // In Cloud Functions, this is automatically initialized
-if (!admin.apps.length) {
-  admin.initializeApp();
+try {
+  if (!admin.apps || admin.apps.length === 0) {
+    admin.initializeApp();
+  }
+} catch (error) {
+  console.error('Firebase Admin SDK already initialized:', error.message);
 }
 
 export const db = admin.firestore();

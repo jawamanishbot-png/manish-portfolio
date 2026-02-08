@@ -1,6 +1,7 @@
 {
   "name": "manish-portfolio-functions",
   "description": "Cloud Functions for Manish Portfolio booking system",
+  "type": "module",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
