@@ -8,7 +8,6 @@ export default function BookingForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,15 +15,8 @@ export default function BookingForm() {
     setLoading(true);
 
     try {
-      // Create booking and get Stripe Checkout URL
-      const { checkout_url } = await createBooking(email, context);
-
-      // Redirect to Stripe Checkout
-      if (checkout_url) {
-        window.location.href = checkout_url;
-      } else {
-        throw new Error('Failed to get checkout URL');
-      }
+      await createBooking(email, context);
+      setSuccess(true);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setLoading(false);
@@ -35,8 +27,10 @@ export default function BookingForm() {
     return (
       <div className="booking-success">
         <div className="success-icon">✓</div>
-        <h3>Redirecting to Payment</h3>
-        <p>{successMessage}</p>
+        <h3>Request Submitted!</h3>
+        <p className="success-message">
+          Thanks! Your booking request has been submitted. We'll review it and send you a calendar link if approved.
+        </p>
       </div>
     );
   }
@@ -76,11 +70,11 @@ export default function BookingForm() {
         className="btn btn-primary btn-block"
         disabled={loading}
       >
-        {loading ? 'Redirecting...' : 'Book Call ($100 USD)'}
+        {loading ? 'Submitting...' : 'Request Consultation'}
       </button>
 
       <p className="form-note">
-        💳 Your payment is secure and processed by Stripe. You'll be redirected to our secure checkout.
+        📋 No payment needed to submit your request. Admin will review and respond within 24 hours.
       </p>
     </form>
   );

@@ -11,7 +11,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('paid'); // paid, pending, approved, rejected, all
+  const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [calEventUrl, setCalEventUrl] = useState('');
 
@@ -142,12 +142,6 @@ export default function AdminDashboard() {
 
       <div className="admin-filters">
         <button
-          className={`filter-btn ${filter === 'paid' ? 'active' : ''}`}
-          onClick={() => setFilter('paid')}
-        >
-          💰 Paid - Awaiting Review ({bookings.filter((b) => b.status === 'paid').length})
-        </button>
-        <button
           className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
           onClick={() => setFilter('pending')}
         >
@@ -197,14 +191,9 @@ export default function AdminDashboard() {
                   {new Date(booking.created_at).toLocaleDateString()} at{' '}
                   {new Date(booking.created_at).toLocaleTimeString()}
                 </p>
-                {booking.payment_id && (
-                  <p className="booking-meta">
-                    <strong>Payment:</strong> {booking.payment_id.slice(0, 10)}...
-                  </p>
-                )}
               </div>
 
-              {(booking.status === 'pending' || booking.status === 'paid') && (
+              {booking.status === 'pending' && (
                 <div className="booking-card-actions">
                   <button
                     className="btn btn-success"
@@ -221,11 +210,11 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {booking.status === 'approved' && booking.cal_event_url && (
+              {booking.status === 'approved' && (booking.cal_event_url || booking.cal_link) && (
                 <p className="booking-cal-link">
                   <strong>Cal.com Link:</strong>{' '}
-                  <a href={booking.cal_event_url} target="_blank" rel="noopener noreferrer">
-                    {booking.cal_event_url}
+                  <a href={booking.cal_event_url || booking.cal_link} target="_blank" rel="noopener noreferrer">
+                    {booking.cal_event_url || booking.cal_link}
                   </a>
                 </p>
               )}

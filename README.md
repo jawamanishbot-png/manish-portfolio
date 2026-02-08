@@ -1,40 +1,34 @@
 # Manish Jawa - Booking System
 
-A modern booking and payment system for consulting sessions with Manish Jawa. Built with React + Vite frontend, Node.js serverless backend (Vercel), Firebase database, and Stripe for secure payments.
+A modern booking system for consulting sessions with Manish Jawa. Built with React + Vite frontend, Node.js serverless backend (Vercel), and Firebase database.
 
 ## 🎯 Features
 
-- **Stripe Checkout Integration**: Secure hosted checkout experience
+- **Simple Booking Form**: Email + topic submission
 - **Firebase Database**: Real-time booking storage and management
 - **Admin Dashboard**: Review, approve, and reject booking requests
 - **Google OAuth**: Secure admin authentication
-- **Cal.com Integration**: Schedule meetings after payment confirmation
-- **Email Notifications**: Automated confirmations and scheduling links
+- **Cal.com Integration**: Schedule meetings after admin approval
+- **Email Notifications**: Automated approval and scheduling links
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## 🔄 Booking Flow
 
 ### User Experience
 
-1. **Browse & Submit Request**
+1. **Submit Request**
    - User visits the portfolio site
    - Clicks "Book a Call" button
    - Fills in email and topic/context
-   - Clicks "Book Call ($100 USD)"
+   - Clicks "Request Consultation"
+   - Sees success message: "Your request has been submitted. We'll review it and send you a calendar link if approved."
 
-2. **Payment**
-   - User is redirected to Stripe Checkout (hosted)
-   - User enters card details securely
-   - User completes payment
-   - Receives success page with confirmation
+2. **Admin Review**
+   - Admin Dashboard shows new pending booking
+   - Admin reviews email and context
+   - Admin approves or rejects
 
-3. **Admin Review**
-   - Payment webhook triggers (Stripe → Your Backend)
-   - Booking status changes to "paid"
-   - Admin Dashboard shows new paid booking
-   - Admin reviews context and approves/rejects
-
-4. **Scheduling**
+3. **Scheduling**
    - If approved: Admin sends Cal.com scheduling link via email
    - User receives link, selects preferred time
    - Meeting is scheduled
@@ -42,24 +36,17 @@ A modern booking and payment system for consulting sessions with Manish Jawa. Bu
 ### Technical Flow
 
 ```
-User Form
+User Form (email + topic)
    ↓
 POST /api/bookings/create
    ↓ (Backend)
-Create Stripe Checkout Session
-Store booking (pending)
+Store booking with status "pending"
    ↓
-Return checkout_url
+Return success message
    ↓
-Redirect to: https://checkout.stripe.com/pay/{session_id}
-   ↓ (Stripe Hosted)
-User Completes Payment
+Show success screen: "Request submitted. Awaiting admin review."
    ↓
-Webhook: checkout.session.completed
-   ↓ (Backend)
-Update booking status → "paid"
-   ↓
-Admin Dashboard shows "Paid - Awaiting Review"
+Admin reviews in dashboard
    ↓
 Admin approves + sends Cal.com link
    ↓
@@ -73,7 +60,6 @@ User receives email with scheduling link
 - Node.js 18+
 - Vercel account (for deployment)
 - Firebase project
-- Stripe account
 - Google OAuth credentials
 
 ### Environment Setup
@@ -89,24 +75,14 @@ VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 
-# Stripe Configuration (Test Keys)
-VITE_STRIPE_PUBLIC_KEY=pk_test_your_public_key
-STRIPE_SECRET_KEY=sk_test_your_secret_key
-STRIPE_WEBHOOK_SECRET=whsec_test_your_webhook_secret
-
 # Google OAuth
 VITE_GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_client_secret
 
 # Admin Configuration
-ADMIN_EMAILS=jawa.manish@gmail.com
+ADMIN_EMAIL=jawa.manish@gmail.com
 
-# Cal.com Configuration
-CAL_COM_API_KEY=your_cal_com_api_key
-
-# JWT Secret
-JWT_SECRET=your-secret-key-change-in-production
+# Cal.com Configuration (for sending scheduling links)
+CAL_COM_API_KEY=your_cal_com_api_key (optional)
 
 # Firebase Service Account (for backend)
 FIREBASE_SERVICE_ACCOUNT_KEY=your_firebase_service_account_json
@@ -136,7 +112,7 @@ npm run preview
 ### Create Booking
 - **POST** `/api/bookings/create`
 - **Body**: `{ email, context }`
-- **Response**: `{ bookingId, session_id, checkout_url }`
+- **Response**: `{ success: true, bookingId, message }`
 
 ### List Bookings (Admin)
 - **GET** `/api/bookings/list`
@@ -155,29 +131,18 @@ npm run preview
 - **Body**: `{ bookingId }`
 - **Response**: `{ success: true, message: "..." }`
 
-### Stripe Webhook
-- **POST** `/api/webhooks/stripe`
-- **Header**: `stripe-signature: {signature}`
-- **Handled Events**:
-  - `checkout.session.completed` - Payment successful
-  - `checkout.session.async_payment_succeeded` - Async payment succeeded
-  - `checkout.session.async_payment_failed` - Async payment failed
-
 ## 🔐 Security Features
 
-- **Stripe Webhook Verification**: All webhooks verified with signature
-- **JWT Authentication**: Admin routes protected with JWT tokens
 - **Firebase Admin SDK**: Secure backend database access
 - **Google OAuth**: Only authorized admin can access dashboard
-- **HTTPS Only**: Checkout and webhooks require HTTPS
-- **No Card Storage**: Cards handled by Stripe, never stored locally
+- **HTTPS Only**: All communications use HTTPS
+- **No Payment Data**: No card or payment information stored
 
 ## 📊 Booking Statuses
 
 | Status | Description | Actions |
 |--------|-------------|---------|
-| **pending** | Initial booking created, awaiting payment | User: Complete payment |
-| **paid** | Payment received, awaiting admin review | Admin: Approve/Reject |
+| **pending** | Booking submitted, awaiting admin review | Admin: Approve/Reject |
 | **approved** | Admin approved, Cal.com link sent | User: Schedule time |
 | **rejected** | Admin rejected booking | User: Create new request |
 
@@ -216,49 +181,24 @@ api/
     └── firebase-admin.js       # Firebase initialization
 ```
 
-## 🧪 Testing Stripe Checkout
+## 🧪 Testing Locally
 
-### Test Card Numbers
-
-Use these in Stripe Checkout (test mode):
-
-- **Visa**: `4242 4242 4242 4242`
-- **Mastercard**: `5555 5555 5555 4444`
-- **Decline**: `4000 0000 0000 0002`
-
-Any future expiry date and any 3-digit CVC
-
-### Testing Locally
+### User Flow Testing
 
 1. Start dev server: `npm run dev`
 2. Click "Book a Call" on the homepage
 3. Fill in test email and topic
-4. Click "Book Call"
-5. Use test card `4242 4242 4242 4242`
-6. Complete payment
-7. Should redirect to `/checkout/success?session_id=...`
+4. Click "Request Consultation"
+5. Should show success message: "Your request has been submitted. We'll review it and send you a calendar link if approved."
 
 ### Admin Testing
 
 1. Visit `http://localhost:5173/admin`
-2. Sign in with Google (test account)
-3. Should show "Paid - Awaiting Review" section
-4. Click "Approve" on a paid booking
+2. Sign in with Google (test account must match ADMIN_EMAIL)
+3. Should show "Pending" section with your test booking
+4. Click "Approve" on the pending booking
 5. Enter a test Cal.com URL
-6. Send approval
-
-## 📝 Stripe Webhook Setup
-
-In Stripe Dashboard:
-
-1. Go to **Developers** → **Webhooks**
-2. Add new endpoint:
-   - **URL**: `https://yourdomain.com/api/webhooks/stripe`
-   - **Events**: Select:
-     - `checkout.session.completed`
-     - `checkout.session.async_payment_succeeded`
-     - `checkout.session.async_payment_failed`
-3. Copy the signing secret to `STRIPE_WEBHOOK_SECRET`
+6. Click "Send Approval & Link"
 
 ## 🚀 Deployment to Vercel
 
@@ -279,11 +219,6 @@ npm run build
 vercel deploy --prod
 ```
 
-### 4. Update Stripe Webhook
-
-1. In Stripe Dashboard, update webhook URL to your Vercel domain:
-   - `https://yourdomain.vercel.app/api/webhooks/stripe`
-
 ## 🔄 Database Schema
 
 ### Bookings Collection
@@ -293,50 +228,41 @@ vercel deploy --prod
   "id": "booking_123",
   "email": "user@example.com",
   "context": "Discussion about leadership...",
-  "status": "paid",
-  "payment_status": "paid",
-  "stripe_session_id": "cs_test_...",
-  "payment_intent_id": "pi_...",
+  "status": "pending",
   "cal_event_url": "https://cal.com/manish/...",
   "created_at": "2026-02-08T12:00:00.000Z",
   "updated_at": "2026-02-08T12:05:00.000Z",
-  "paid_at": "2026-02-08T12:01:00.000Z"
+  "approved_at": "2026-02-08T12:05:00.000Z",
+  "approved_by": "jawa.manish@gmail.com"
 }
 ```
 
 ## 🐛 Troubleshooting
 
-### Stripe Checkout Not Redirecting
+### Booking Form Not Submitting
 
 - Check `VITE_APP_URL` is correct in `.env.local`
-- Ensure Stripe test keys are set
 - Check browser console for errors
+- Verify Firebase configuration is correct
 
-### Webhook Not Triggering
+### Admin Can't See Pending Bookings
 
-- Verify webhook secret in Stripe Dashboard
+- Verify user is logged in with correct Google account
+- Verify `ADMIN_EMAIL` in `.env.local` matches the email
+- Check that bookings exist in Firebase with status "pending"
+
+### Approval Email Not Sent
+
+- Verify email service configuration in API
 - Check Vercel logs: `vercel logs`
-- Ensure webhook endpoint is receiving POST requests
-
-### Admin Can't See Paid Bookings
-
-- Verify booking status is "paid" in Firebase
-- Check that user is logged in with correct Google account
-- Verify `ADMIN_EMAILS` contains the admin email
-
-### Payment Succeeds But No Booking Update
-
-- Check webhook logs in Stripe Dashboard
-- Verify `STRIPE_WEBHOOK_SECRET` matches in Vercel
-- Check Firebase database permissions
+- Ensure booking.email is valid
 
 ## 📚 Additional Resources
 
-- [Stripe Checkout Documentation](https://stripe.com/docs/payments/checkout)
-- [Stripe Webhooks Guide](https://stripe.com/docs/webhooks)
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [Cal.com API](https://cal.com/docs/api)
 - [Vercel Serverless Functions](https://vercel.com/docs/functions/serverless-functions)
+- [Firebase Auth with Google](https://firebase.google.com/docs/auth/web/google-signin)
 
 ## 📄 License
 

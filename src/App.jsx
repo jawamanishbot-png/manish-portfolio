@@ -2,16 +2,12 @@ import './App.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import BookingModal from './components/BookingModal'
 import AdminDashboard from './components/AdminDashboard'
-import CheckoutSuccess from './pages/CheckoutSuccess'
-import CheckoutCancel from './pages/CheckoutCancel'
 
 export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/checkout/success" element={<CheckoutSuccess />} />
-        <Route path="/checkout/cancel" element={<CheckoutCancel />} />
         <Route path="/" element={<MainPage />} />
       </Routes>
     </Router>
