@@ -1,12 +1,16 @@
 import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import express from 'express';
 import cors from 'cors';
 
 // Initialize Firebase Admin SDK at module load time
 // This must happen BEFORE importing other modules that use Firebase
-if (!admin.apps || admin.apps.length === 0) {
-  admin.initializeApp();
+try {
+  if (!admin.apps || admin.apps.length === 0) {
+    admin.initializeApp();
+  }
+} catch (error) {
+  console.log('Firebase Admin already initialized or initialization failed:', error.message);
 }
 
 // Now safe to import handlers that use Firebase
