@@ -1,10 +1,8 @@
-import { db } from '../_firebase.js';
-import { handleError, getBookingById, updateBooking } from '../_utils.js';
+import Stripe from 'stripe';
+import { db } from '../utils/firebase-admin.js';
 
-/**
- * POST /api/bookings/confirm
- * Confirm payment and update booking status
- */
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -14,33 +12,29 @@ export default async function handler(req, res) {
     const { bookingId, paymentIntentId } = req.body;
 
     if (!bookingId || !paymentIntentId) {
-      return res.status(400).json({
-        error: 'bookingId and paymentIntentId are required',
-      });
+      return res.status(400).json({ error: 'Missing bookingId or paymentIntentId' });
     }
 
-    // Get the booking
-    const booking = await getBookingById(bookingId);
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    // Verify the payment intent matches
-    if (booking.stripe_id !== paymentIntentId) {
-      return res.status(400).json({
-        error: 'Payment intent does not match booking',
-      });
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ error: 'Payment not successful' });
     }
 
-    // Update booking status to pending (ready for admin review)
-    const updatedBooking = await updateBooking(bookingId, {
-      status: 'pending',
-      payment_confirmed_at: new Date().toISOString(),
+    await db.collection('bookings').doc(bookingId).update({
+      payment_status: 'succeeded',
+      payment_id: paymentIntentId,
+      paid_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
 
     return res.status(200).json({
       success: true,
-      booking: updatedBooking,
+      message: 'Booking confirmed',
+      bookingId,
     });
-  } catch (err) {
-    console.error('Booking confirm error:', err);
-    return handleError(res, err);
+  } catch (error) {
+    console.error('Error confirming booking:', error);
+    return res.status(500).json({ error: error.message });
   }
 }

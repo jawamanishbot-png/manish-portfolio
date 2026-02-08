@@ -1,14 +1,8 @@
 import Stripe from 'stripe';
-import { db } from '../_firebase.js';
-import { handleError } from '../_utils.js';
+import { db } from '../utils/firebase-admin.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const BOOKING_AMOUNT = 10000; // $100 in cents
 
-/**
- * POST /api/bookings/create
- * Create a booking and return Stripe payment intent client secret
- */
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -18,43 +12,42 @@ export default async function handler(req, res) {
     const { email, context } = req.body;
 
     if (!email || !context) {
-      return res.status(400).json({
-        error: 'Email and context are required',
-      });
+      return res.status(400).json({ error: 'Missing email or context' });
     }
 
-    // Create Stripe payment intent
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: BOOKING_AMOUNT,
+      amount: 10000,
       currency: 'usd',
-      description: `Booking request from ${email}`,
       metadata: {
         email,
         context,
       },
     });
 
-    // Create booking record in Firestore (initial status: pending_payment)
-    const booking = {
+    const bookingRef = db.collection('bookings').doc();
+    await bookingRef.set({
+      id: bookingRef.id,
       email,
       context,
-      status: 'pending_payment',
-      stripe_id: paymentIntent.id,
+      status: 'pending',
+      payment_intent_id: paymentIntent.id,
+      payment_status: 'pending',
       created_at: new Date().toISOString(),
-      approved_at: null,
-      rejected_at: null,
-      cal_link: null,
-    };
-
-    const docRef = await db.collection('bookings').add(booking);
+      updated_at: new Date().toISOString(),
+    });
 
     return res.status(200).json({
-      success: true,
-      bookingId: docRef.id,
+      bookingId: bookingRef.id,
       clientSecret: paymentIntent.client_secret,
+      amount: paymentIntent.amount,
     });
-  } catch (err) {
-    console.error('Booking create error:', err);
-    return handleError(res, err);
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    return res.status(500).json({ error: error.message });
   }
 }

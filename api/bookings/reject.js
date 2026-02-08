@@ -1,60 +1,65 @@
-import { db } from '../_firebase.js';
-import { getAuthUser, handleError, getBookingById, updateBooking, sendEmail } from '../_utils.js';
+import { db, auth } from '../utils/firebase-admin.js';
+import { sendRejectionEmail } from '../utils/email.js';
 
-/**
- * POST /api/bookings/reject
- * Reject a booking and notify the user
- */
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jawa.manish@gmail.com';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Verify admin user
-    const authUser = await getAuthUser(req);
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing authorization token' });
+    }
+
+    const token = authHeader.substring('Bearer '.length);
+
+    let decodedToken;
+    try {
+      decodedToken = await auth.verifyIdToken(token);
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    if (decodedToken.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     const { bookingId } = req.body;
 
     if (!bookingId) {
-      return res.status(400).json({
-        error: 'bookingId is required',
-      });
+      return res.status(400).json({ error: 'Missing bookingId' });
     }
 
-    // Get the booking
-    const booking = await getBookingById(bookingId);
+    const bookingDoc = await db.collection('bookings').doc(bookingId).get();
+    if (!bookingDoc.exists) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
 
-    // Update booking status to rejected
-    const updatedBooking = await updateBooking(bookingId, {
+    const booking = bookingDoc.data();
+
+    try {
+      await sendRejectionEmail(booking.email);
+    } catch (emailError) {
+      console.error('Email send failed, but continuing:', emailError);
+    }
+
+    await db.collection('bookings').doc(bookingId).update({
       status: 'rejected',
       rejected_at: new Date().toISOString(),
+      rejected_by: decodedToken.email,
+      updated_at: new Date().toISOString(),
     });
-
-    // Send email to user notifying rejection
-    const emailSubject = 'Update on Your Booking Request';
-    const emailHtml = `
-      <h2>Booking Update</h2>
-      <p>Hi,</p>
-      <p>Thank you for your interest in scheduling a call with Manish. Unfortunately, we're unable to schedule your call at this time.</p>
-      <p>Feel free to reach out again in the future or connect via LinkedIn.</p>
-      <p>Best regards,<br/>Manish Jawa</p>
-    `;
-
-    // Send email (will be improved with actual email provider)
-    try {
-      await sendEmail(booking.email, emailSubject, emailHtml);
-    } catch (emailErr) {
-      console.error('Failed to send email:', emailErr);
-      // Don't fail the entire request if email fails
-    }
 
     return res.status(200).json({
       success: true,
-      booking: updatedBooking,
+      message: 'Booking rejected and email sent',
+      bookingId,
     });
-  } catch (err) {
-    console.error('Booking reject error:', err);
-    return handleError(res, err, 401);
+  } catch (error) {
+    console.error('Error rejecting booking:', error);
+    return res.status(500).json({ error: error.message });
   }
 }

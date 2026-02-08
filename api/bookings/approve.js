@@ -1,63 +1,72 @@
-import { db } from '../_firebase.js';
-import { getAuthUser, handleError, getBookingById, updateBooking, sendEmail } from '../_utils.js';
+import { db, auth } from '../utils/firebase-admin.js';
+import { sendApprovalEmail } from '../utils/email.js';
 
-/**
- * POST /api/bookings/approve
- * Approve a booking and send user the Cal.com link
- */
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jawa.manish@gmail.com';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Verify admin user
-    const authUser = await getAuthUser(req);
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing authorization token' });
+    }
+
+    const token = authHeader.substring('Bearer '.length);
+
+    let decodedToken;
+    try {
+      decodedToken = await auth.verifyIdToken(token);
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    if (decodedToken.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     const { bookingId, calEventUrl } = req.body;
 
     if (!bookingId || !calEventUrl) {
-      return res.status(400).json({
-        error: 'bookingId and calEventUrl are required',
-      });
+      return res.status(400).json({ error: 'Missing bookingId or calEventUrl' });
     }
 
-    // Get the booking
-    const booking = await getBookingById(bookingId);
-
-    // Update booking status to approved
-    const updatedBooking = await updateBooking(bookingId, {
-      status: 'approved',
-      cal_link: calEventUrl,
-      approved_at: new Date().toISOString(),
-    });
-
-    // Send email to user with Cal.com link
-    const emailSubject = 'Your Call with Manish is Confirmed!';
-    const emailHtml = `
-      <h2>Your Booking is Approved!</h2>
-      <p>Hi,</p>
-      <p>Thank you for your interest in a call with Manish. Your booking has been approved!</p>
-      <p><strong>Schedule your call here:</strong></p>
-      <p><a href="${calEventUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Book Your 25-Minute Call</a></p>
-      <p>If the button doesn't work, you can also copy and paste this link: ${calEventUrl}</p>
-      <p>Best regards,<br/>Manish Jawa</p>
-    `;
-
-    // Send email (will be improved with actual email provider)
     try {
-      await sendEmail(booking.email, emailSubject, emailHtml);
-    } catch (emailErr) {
-      console.error('Failed to send email:', emailErr);
-      // Don't fail the entire request if email fails
+      new URL(calEventUrl);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL format' });
     }
+
+    const bookingDoc = await db.collection('bookings').doc(bookingId).get();
+    if (!bookingDoc.exists) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = bookingDoc.data();
+
+    try {
+      await sendApprovalEmail(booking.email, calEventUrl);
+    } catch (emailError) {
+      console.error('Email send failed, but continuing:', emailError);
+    }
+
+    await db.collection('bookings').doc(bookingId).update({
+      status: 'approved',
+      cal_event_url: calEventUrl,
+      approved_at: new Date().toISOString(),
+      approved_by: decodedToken.email,
+      updated_at: new Date().toISOString(),
+    });
 
     return res.status(200).json({
       success: true,
-      booking: updatedBooking,
+      message: 'Booking approved and email sent',
+      bookingId,
     });
-  } catch (err) {
-    console.error('Booking approve error:', err);
-    return handleError(res, err, 401);
+  } catch (error) {
+    console.error('Error approving booking:', error);
+    return res.status(500).json({ error: error.message });
   }
 }
