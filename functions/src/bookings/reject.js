@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { sendRejectionEmail } from '../email.js';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
 
@@ -41,13 +42,22 @@ export const rejectBooking = async (req, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
+    const booking = doc.data();
+
+    try {
+      await sendRejectionEmail(booking.email);
+    } catch (emailError) {
+      console.error('Email send failed, but continuing:', emailError);
+    }
+
     await docRef.update({
       status: 'rejected',
       rejected_at: new Date().toISOString(),
+      rejected_by: decodedToken.email,
       updated_at: new Date().toISOString(),
     });
 
-    return res.status(200).json({ success: true, message: 'Booking rejected' });
+    return res.status(200).json({ success: true, message: 'Booking rejected and email sent' });
   } catch (error) {
     console.error('Error rejecting booking:', error);
     return res.status(500).json({ error: error.message });

@@ -26,6 +26,15 @@ jest.unstable_mockModule('firebase-admin', () => ({
   },
 }));
 
+// Mock email module
+const mockSendApprovalEmail = jest.fn().mockResolvedValue(undefined);
+const mockSendRejectionEmail = jest.fn().mockResolvedValue(undefined);
+
+jest.unstable_mockModule('../email.js', () => ({
+  sendApprovalEmail: mockSendApprovalEmail,
+  sendRejectionEmail: mockSendRejectionEmail,
+}));
+
 // Import handlers after mocking
 const { createBooking } = await import('../bookings/create.js');
 const { listBookings } = await import('../bookings/list.js');
@@ -215,17 +224,17 @@ describe('approveBooking', () => {
 
   beforeEach(() => {
     mockVerifyIdToken.mockResolvedValue({ email: 'jawa.manish@gmail.com' });
-    mockGet.mockResolvedValue({ exists: true, data: () => ({ id: 'b1', status: 'pending' }) });
+    mockGet.mockResolvedValue({ exists: true, data: () => ({ id: 'b1', email: 'user@test.com', status: 'pending' }) });
     mockUpdate.mockResolvedValue({});
     mockDoc.mockReturnValue({ get: mockGet, update: mockUpdate });
     mockCollection.mockReturnValue({ doc: mockDoc });
   });
 
-  it('approves a pending booking', async () => {
+  it('approves a pending booking and sends email', async () => {
     const req = {
       method: 'POST',
       headers: { authorization: `Bearer ${adminToken}` },
-      body: { bookingId: 'b1', calLink: 'https://cal.com/manish/30min' },
+      body: { bookingId: 'b1', calEventUrl: 'https://cal.com/manish/30min' },
     };
     const res = mockRes();
 
@@ -233,14 +242,31 @@ describe('approveBooking', () => {
 
     expect(mockCollection).toHaveBeenCalledWith('bookings');
     expect(mockDoc).toHaveBeenCalledWith('b1');
+    expect(mockSendApprovalEmail).toHaveBeenCalledWith('user@test.com', 'https://cal.com/manish/30min');
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'approved',
-        cal_link: 'https://cal.com/manish/30min',
+        cal_event_url: 'https://cal.com/manish/30min',
+        approved_by: 'jawa.manish@gmail.com',
       })
     );
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Booking approved' });
+    expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Booking approved and email sent' });
+  });
+
+  it('continues if email send fails', async () => {
+    mockSendApprovalEmail.mockRejectedValue(new Error('SMTP down'));
+    const req = {
+      method: 'POST',
+      headers: { authorization: `Bearer ${adminToken}` },
+      body: { bookingId: 'b1', calEventUrl: 'https://cal.com/manish/30min' },
+    };
+    const res = mockRes();
+
+    await approveBooking(req, res);
+
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
   });
 
   it('returns 404 for non-existent booking', async () => {
@@ -248,7 +274,7 @@ describe('approveBooking', () => {
     const req = {
       method: 'POST',
       headers: { authorization: `Bearer ${adminToken}` },
-      body: { bookingId: 'nonexistent', calLink: 'https://cal.com/manish/30min' },
+      body: { bookingId: 'nonexistent', calEventUrl: 'https://cal.com/manish/30min' },
     };
     const res = mockRes();
 
@@ -262,17 +288,17 @@ describe('approveBooking', () => {
     const req = {
       method: 'POST',
       headers: { authorization: `Bearer ${adminToken}` },
-      body: { calLink: 'https://cal.com/manish/30min' },
+      body: { calEventUrl: 'https://cal.com/manish/30min' },
     };
     const res = mockRes();
 
     await approveBooking(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Missing bookingId or calLink' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing bookingId or calEventUrl' });
   });
 
-  it('rejects missing calLink', async () => {
+  it('rejects missing calEventUrl', async () => {
     const req = {
       method: 'POST',
       headers: { authorization: `Bearer ${adminToken}` },
@@ -283,7 +309,21 @@ describe('approveBooking', () => {
     await approveBooking(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Missing bookingId or calLink' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing bookingId or calEventUrl' });
+  });
+
+  it('rejects invalid URL format', async () => {
+    const req = {
+      method: 'POST',
+      headers: { authorization: `Bearer ${adminToken}` },
+      body: { bookingId: 'b1', calEventUrl: 'not-a-url' },
+    };
+    const res = mockRes();
+
+    await approveBooking(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid URL format' });
   });
 
   it('rejects non-admin user', async () => {
@@ -291,7 +331,7 @@ describe('approveBooking', () => {
     const req = {
       method: 'POST',
       headers: { authorization: `Bearer ${adminToken}` },
-      body: { bookingId: 'b1', calLink: 'https://cal.com/manish/30min' },
+      body: { bookingId: 'b1', calEventUrl: 'https://cal.com/manish/30min' },
     };
     const res = mockRes();
 
@@ -305,7 +345,7 @@ describe('approveBooking', () => {
     const req = {
       method: 'POST',
       headers: {},
-      body: { bookingId: 'b1', calLink: 'https://cal.com/manish/30min' },
+      body: { bookingId: 'b1', calEventUrl: 'https://cal.com/manish/30min' },
     };
     const res = mockRes();
 
@@ -330,13 +370,13 @@ describe('rejectBooking', () => {
 
   beforeEach(() => {
     mockVerifyIdToken.mockResolvedValue({ email: 'jawa.manish@gmail.com' });
-    mockGet.mockResolvedValue({ exists: true, data: () => ({ id: 'b1', status: 'pending' }) });
+    mockGet.mockResolvedValue({ exists: true, data: () => ({ id: 'b1', email: 'user@test.com', status: 'pending' }) });
     mockUpdate.mockResolvedValue({});
     mockDoc.mockReturnValue({ get: mockGet, update: mockUpdate });
     mockCollection.mockReturnValue({ doc: mockDoc });
   });
 
-  it('rejects a pending booking', async () => {
+  it('rejects a pending booking and sends email', async () => {
     const req = {
       method: 'POST',
       headers: { authorization: `Bearer ${adminToken}` },
@@ -348,13 +388,30 @@ describe('rejectBooking', () => {
 
     expect(mockCollection).toHaveBeenCalledWith('bookings');
     expect(mockDoc).toHaveBeenCalledWith('b1');
+    expect(mockSendRejectionEmail).toHaveBeenCalledWith('user@test.com');
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'rejected',
+        rejected_by: 'jawa.manish@gmail.com',
       })
     );
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Booking rejected' });
+    expect(res.json).toHaveBeenCalledWith({ success: true, message: 'Booking rejected and email sent' });
+  });
+
+  it('continues if email send fails', async () => {
+    mockSendRejectionEmail.mockRejectedValue(new Error('SMTP down'));
+    const req = {
+      method: 'POST',
+      headers: { authorization: `Bearer ${adminToken}` },
+      body: { bookingId: 'b1' },
+    };
+    const res = mockRes();
+
+    await rejectBooking(req, res);
+
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
   });
 
   it('returns 404 for non-existent booking', async () => {

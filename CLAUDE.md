@@ -29,8 +29,7 @@ firebase emulators:start   # Functions:5001, Firestore:8080, Auth:9099
 │   │   ├── BookingForm.jsx       # User booking request form
 │   │   └── BookingModal.jsx      # Modal wrapper for BookingForm
 │   ├── config/
-│   │   ├── firebase.js           # Firebase client init (hardcoded config)
-│   │   └── stripe.js             # Stripe config (legacy, unused)
+│   │   └── firebase.js           # Firebase client init (hardcoded config)
 │   ├── services/
 │   │   └── api.js                # API client (createBooking, getBookings, etc.)
 │   ├── __tests__/
@@ -39,7 +38,7 @@ firebase emulators:start   # Functions:5001, Firestore:8080, Auth:9099
 │   ├── main.jsx                  # Entry point, React Router setup
 │   ├── App.css                   # Portfolio page styles
 │   └── index.css                 # Global styles
-├── functions/                    # Firebase Cloud Functions (production backend)
+├── functions/                    # Firebase Cloud Functions (backend)
 │   ├── src/
 │   │   ├── index.js              # Express app, function exports
 │   │   ├── firebase.js           # Firebase Admin SDK init
@@ -47,17 +46,14 @@ firebase emulators:start   # Functions:5001, Firestore:8080, Auth:9099
 │   │   ├── bookings/             # Booking CRUD handlers
 │   │   │   ├── create.js         # POST /api/bookings/create
 │   │   │   ├── list.js           # GET  /api/bookings/list (admin)
-│   │   │   ├── approve.js        # POST /api/bookings/approve (admin)
-│   │   │   └── reject.js         # POST /api/bookings/reject (admin)
-│   │   └── webhooks/
-│   │       └── stripe.js         # Legacy Stripe webhook
+│   │   │   ├── approve.js        # POST /api/bookings/approve (admin, sends email)
+│   │   │   └── reject.js         # POST /api/bookings/reject (admin, sends email)
+│   │   └── __tests__/
+│   │       └── bookings.test.js  # Unit tests for all handlers (28 tests)
+│   ├── jest.config.js            # Jest config for backend tests
 │   └── package.json              # Backend dependencies (Node 20)
-├── api/                          # Vercel serverless functions (alternative backend)
-│   ├── bookings/                 # Same endpoints as functions/src/bookings/
-│   └── utils/                    # firebase-admin.js, email.js
 ├── public/                       # Static assets
 ├── firebase.json                 # Firebase hosting + functions config
-├── vercel.json                   # Vercel deployment config
 ├── vite.config.js                # Vite build config
 └── .env.example                  # Required environment variables template
 ```
@@ -93,8 +89,8 @@ npm run deploy:functions       # Deploy Cloud Functions only
 npm run deploy:hosting         # Build + deploy hosting only
 
 # Testing
-npm run test:jest              # Jest unit tests
-npm run test                   # API integration test script
+cd functions && npm test       # Backend unit tests (28 tests)
+npm run test:jest              # Frontend unit tests (BookingForm)
 
 # Linting
 npm run lint                   # ESLint
@@ -122,6 +118,7 @@ npm run lint                   # ESLint
 - **Pattern:** Express routes inside a single Firebase Cloud Function (`api`)
 - **Storage:** Booking data stored in Firestore `bookings` collection, one document per booking keyed by booking ID
 - **Auth flow:** Firebase ID token verification → admin email check
+- **Email:** Approval/rejection handlers send emails via Nodemailer, but continue even if email fails
 - **Email templates:** HTML emails with inline styles in `functions/src/email.js`
 
 ### Data Model — Booking
@@ -135,17 +132,12 @@ npm run lint                   # ESLint
   "created_at": "ISO timestamp",
   "updated_at": "ISO timestamp",
   "approved_at": "ISO timestamp (if approved)",
+  "approved_by": "admin email (if approved)",
   "cal_event_url": "https://cal.com/... (if approved)"
 }
 ```
 
 ## Important Context for AI Assistants
-
-### Dual Backend
-There are **two backend implementations** — `functions/` (Firebase, production) and `api/` (Vercel, alternative). The Firebase Cloud Functions path is the active one. When modifying backend logic, update `functions/src/` first. The `api/` directory is a Vercel alternative that may be out of sync.
-
-### Legacy Stripe Code
-Stripe payment integration exists in the codebase but is **inactive**. The booking flow is now free (no payment). Stripe-related files (`src/config/stripe.js`, `api/webhooks/stripe.js`, `functions/src/webhooks/stripe.js`, `api/bookings/confirm.js`) are legacy and can be ignored or removed.
 
 ### Storage History
 Bookings were originally in Firestore, briefly migrated to Cloud Storage (JSON files), and have been **migrated back to Firestore** as the current production database. The `bookings` collection in Firestore is the single source of truth.
@@ -172,7 +164,6 @@ See `.env.example` for the full list. Key groups:
 1. Create handler in `functions/src/bookings/` (or new directory)
 2. Register route in `functions/src/index.js` Express app
 3. Add corresponding client function in `src/services/api.js`
-4. Optionally mirror in `api/` for Vercel compatibility
 
 ### Adding a new frontend section
 1. Add content in `App.jsx` (single-page portfolio)
@@ -184,16 +175,13 @@ Edit `functions/src/email.js` — templates use inline HTML/CSS styles for email
 
 ### Running tests
 ```bash
-npm run test:jest    # Unit tests (BookingForm)
-node test-booking-api.js   # API smoke test
+cd functions && npm test   # Backend handler tests
+npm run test:jest          # Frontend component tests
 ```
 
 ## Documentation Files
 
-The repo contains extensive markdown documentation. Key files:
 - `README.md` — Main project overview
 - `QUICKSTART.md` — 5-minute setup guide
 - `BOOKING_SYSTEM_README.md` / `BOOKING_SYSTEM_SETUP.md` — Booking system docs
 - `PAYMENT_REMOVAL_SUMMARY.md` — Stripe removal notes
-- `FIREBASE_MIGRATION_GUIDE.md` — Firestore → Cloud Storage migration
-- `VERCEL_DEPLOYMENT.md` — Vercel-specific deployment guide
