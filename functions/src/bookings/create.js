@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { sendBookingNotificationEmail } from '../email.js';
 
 export const createBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -31,6 +32,12 @@ export const createBooking = async (req, res) => {
     await db.collection('bookings').doc(bookingId).set(bookingData);
 
     console.log(`Booking created: ${bookingId}`);
+
+    // Send notification email to admin (non-blocking)
+    sendBookingNotificationEmail(bookingData).catch(error => {
+      console.error('Failed to send notification email:', error);
+      // Don't fail the booking if email fails
+    });
 
     return res.status(200).json({
       success: true,

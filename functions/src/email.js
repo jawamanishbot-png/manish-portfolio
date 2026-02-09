@@ -60,3 +60,46 @@ export const sendRejectionEmail = async (userEmail) => {
     throw error;
   }
 };
+
+export const sendBookingNotificationEmail = async (bookingData) => {
+  const adminEmail = process.env.ADMIN_EMAIL || 'jawa.manish@gmail.com';
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: adminEmail,
+    subject: 'New Booking Request - Action Required',
+    html: `
+      <h2>🎉 You have a new booking request!</h2>
+      <p><strong>From:</strong> ${bookingData.email}</p>
+      <p><strong>Booking ID:</strong> ${bookingData.id}</p>
+      <p><strong>Context/Message:</strong></p>
+      <blockquote style="background-color: #f3f4f6; padding: 12px; border-left: 4px solid #22c55e;">
+        ${bookingData.context.replace(/\n/g, '<br />')}
+      </blockquote>
+      <p><strong>Submitted:</strong> ${new Date(bookingData.created_at).toLocaleString('en-US', { 
+        timeZone: 'America/Los_Angeles',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })} PST</p>
+      <p>
+        <a href="https://manish-portfolio-bookings.web.app/admin" style="padding: 12px 24px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 12px;">
+          Review in Admin Dashboard
+        </a>
+      </p>
+      <p style="font-size: 12px; color: #6b7280; margin-top: 24px;">
+        Log in to your admin dashboard to approve or reject this request.
+      </p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Booking notification email sent to ${adminEmail} for booking ${bookingData.id}`);
+  } catch (error) {
+    console.error('Failed to send booking notification email:', error);
+    // Don't throw - log but continue, don't fail the booking
+  }
+};
