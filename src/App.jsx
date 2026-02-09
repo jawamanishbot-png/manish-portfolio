@@ -25,11 +25,12 @@ function MainPage() {
       <header className="hero">
         <div className="hero-bg-glow" aria-hidden="true"></div>
         <div className="hero-content">
-          <p className="hero-tag">Engineering Leader &bull; AI/ML &bull; Distributed Systems</p>
+          <p className="hero-tag">Engineering Leader &bull; AI/ML &bull; Advisor &bull; Angel Investor</p>
           <h1 className="hero-name">Manish Jawa</h1>
           <p className="hero-desc">
             18+ years building high-impact systems at <strong>Meta</strong>, <strong>Amazon</strong>, and <strong>Flipkart</strong>.
             I turn complex technical challenges into scalable products that serve hundreds of millions.
+            I also advise and angel invest in early-stage startups.
           </p>
           <div className="hero-cta">
             <BookingModal />
@@ -75,6 +76,11 @@ function MainPage() {
               virtualization, and mobile security. I combine this depth with a focus
               on building high-performing teams and shipping products that matter.
             </p>
+            <p>
+              Beyond my full-time role, I advise and angel invest in early-stage
+              startups, helping founders navigate technical architecture, product-market
+              fit, and scaling challenges.
+            </p>
           </div>
           <div className="about-highlights">
             <div className="highlight">
@@ -92,6 +98,10 @@ function MainPage() {
             <div className="highlight">
               <h3>Systems &amp; Security</h3>
               <p>OS internals, mobile virtualization, application security</p>
+            </div>
+            <div className="highlight">
+              <h3>Advisory &amp; Investing</h3>
+              <p>Angel investing, startup advisory, product-market fit, scaling strategy</p>
             </div>
           </div>
         </div>
@@ -221,7 +231,7 @@ function MainPage() {
         <div className="contact-inner">
           <h2>Let&rsquo;s Connect</h2>
           <p className="contact-desc">
-            Interested in discussing engineering leadership, AI/ML strategy, or building great teams?
+            Interested in discussing engineering leadership, AI/ML strategy, startup advisory, or angel investment?
             I&rsquo;d love to hear from you.
           </p>
           <div className="contact-actions">
