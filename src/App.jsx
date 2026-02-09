@@ -11,185 +11,230 @@ function MainPage() {
       {/* Navigation */}
       <nav className="navbar">
         <div className="nav-container">
-          <h1 className="logo">Manish Jawa</h1>
+          <a href="#" className="logo">MJ</a>
           <div className="nav-links">
+            <a href="#about">About</a>
             <a href="#experience">Experience</a>
+            <a href="#patents">Patents</a>
             <a href="#contact">Contact</a>
-            <a href="/admin" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Admin</a>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
       <header className="hero">
+        <div className="hero-bg-glow" aria-hidden="true"></div>
         <div className="hero-content">
-          <h1>Manish Jawa</h1>
-          <p className="hero-subtitle">Engineering Leader | AI/ML | Distributed Systems</p>
-          <p className="hero-desc">18+ years building high-impact systems at Meta, Amazon, and Flipkart</p>
+          <p className="hero-tag">Engineering Leader &bull; AI/ML &bull; Distributed Systems</p>
+          <h1 className="hero-name">Manish Jawa</h1>
+          <p className="hero-desc">
+            18+ years building high-impact systems at <strong>Meta</strong>, <strong>Amazon</strong>, and <strong>Flipkart</strong>.
+            I turn complex technical challenges into scalable products that serve hundreds of millions.
+          </p>
           <div className="hero-cta">
             <BookingModal />
-            <a href="mailto:jawa.manish@gmail.com" className="btn btn-secondary">Email</a>
+            <a href="https://linkedin.com/in/manishjawa" className="btn btn-secondary" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           </div>
         </div>
       </header>
 
-      {/* Key Stats */}
-      <section className="stats">
+      {/* Stats */}
+      <section className="stats" aria-label="Key achievements">
         <div className="stat-card">
-          <h3>18+</h3>
-          <p>Years</p>
+          <span className="stat-number">18+</span>
+          <span className="stat-label">Years of Experience</span>
         </div>
         <div className="stat-card">
-          <h3>10</h3>
-          <p>Patents</p>
+          <span className="stat-number">10</span>
+          <span className="stat-label">US Patents</span>
         </div>
         <div className="stat-card">
-          <h3>3x</h3>
-          <p>Revenue Growth</p>
+          <span className="stat-number">3x</span>
+          <span className="stat-label">Revenue Growth at Meta</span>
         </div>
         <div className="stat-card">
-          <h3>100M+</h3>
-          <p>Impact/Day</p>
+          <span className="stat-number">100M+</span>
+          <span className="stat-label">Users Impacted Daily</span>
+        </div>
+      </section>
+
+      {/* About */}
+      <section id="about" className="about">
+        <h2>About</h2>
+        <div className="about-grid">
+          <div className="about-text">
+            <p>
+              I&rsquo;m an engineering leader who thrives at the intersection of
+              <strong> AI/ML</strong>, <strong>distributed systems</strong>, and
+              <strong> product strategy</strong>. I&rsquo;ve led teams of up to 24
+              engineers, built ML platforms processing 100M+ content pieces daily,
+              and delivered 3x revenue impact at Meta.
+            </p>
+            <p>
+              My technical roots are deep &mdash; 10 US patents in systems programming,
+              virtualization, and mobile security. I combine this depth with a focus
+              on building high-performing teams and shipping products that matter.
+            </p>
+          </div>
+          <div className="about-highlights">
+            <div className="highlight">
+              <h3>Distributed Systems</h3>
+              <p>Microservices, high-availability platforms, systems at massive scale</p>
+            </div>
+            <div className="highlight">
+              <h3>AI / ML</h3>
+              <p>Recommendation engines, ML platforms, generative AI applications</p>
+            </div>
+            <div className="highlight">
+              <h3>Engineering Leadership</h3>
+              <p>Team scaling, org building, cross-functional strategic planning</p>
+            </div>
+            <div className="highlight">
+              <h3>Systems &amp; Security</h3>
+              <p>OS internals, mobile virtualization, application security</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Experience */}
       <section id="experience" className="experience">
         <h2>Experience</h2>
-        <div className="timeline">
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>Meta</h3>
-              <p><strong>Software Engineering Manager</strong> • 2022 - Present</p>
-              <p>3x revenue impact | Led 18 ICs | Mobile Ads Experience</p>
+        <div className="exp-grid">
+          <div className="exp-card exp-featured">
+            <div className="exp-header">
+              <span className="exp-company">Meta</span>
+              <span className="exp-period">2022 &ndash; Present</span>
             </div>
+            <p className="exp-role">Software Engineering Manager</p>
+            <ul className="exp-details">
+              <li>3x revenue impact on Mobile Ads Experience</li>
+              <li>Led a team of 18 ICs across multiple workstreams</li>
+              <li>Driving AI-powered ad ranking and delivery systems</li>
+            </ul>
           </div>
 
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>Amazon</h3>
-              <p><strong>Software Development Manager</strong> • 2020 - 2022</p>
-              <p>20% order volume increase | Led 24 engineers</p>
+          <div className="exp-card">
+            <div className="exp-header">
+              <span className="exp-company">Amazon</span>
+              <span className="exp-period">2020 &ndash; 2022</span>
             </div>
+            <p className="exp-role">Software Development Manager</p>
+            <ul className="exp-details">
+              <li>20% order volume increase through systems optimization</li>
+              <li>Led 24 engineers across distributed services</li>
+            </ul>
           </div>
 
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>Flipkart</h3>
-              <p><strong>Engineering Manager</strong> • 2018 - 2019</p>
-              <p>10% cost savings | 100M content/day automation with AI/ML</p>
+          <div className="exp-card">
+            <div className="exp-header">
+              <span className="exp-company">Flipkart</span>
+              <span className="exp-period">2018 &ndash; 2019</span>
             </div>
+            <p className="exp-role">Engineering Manager</p>
+            <ul className="exp-details">
+              <li>10% cost savings through infrastructure optimization</li>
+              <li>Built AI/ML pipeline automating 100M+ content/day</li>
+            </ul>
           </div>
 
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>Browserstack, Notify.io, Fireeye, VMware, Citrix</h3>
-              <p>Senior roles in mobile security, virtualization, and ML systems</p>
+          <div className="exp-card">
+            <div className="exp-header">
+              <span className="exp-company">BrowserStack, FireEye, VMware, Citrix</span>
+              <span className="exp-period">2008 &ndash; 2018</span>
             </div>
+            <p className="exp-role">Senior Engineering Roles</p>
+            <ul className="exp-details">
+              <li>Mobile security, virtualization, and ML systems</li>
+              <li>10 US patents in systems programming</li>
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* Patents & Publications */}
-      <section className="patents">
-        <h2>Patents & Publications</h2>
-        <p className="section-subtitle">Google Scholar Profile: <a href="https://scholar.google.com/citations?user=Bh4CeJ8AAAAJ&hl=en" target="_blank">View Full Profile</a></p>
+      {/* Patents */}
+      <section id="patents" className="patents">
+        <div className="patents-header">
+          <h2>Patents &amp; Publications</h2>
+          <a href="https://scholar.google.com/citations?user=Bh4CeJ8AAAAJ&hl=en" className="patents-link" target="_blank" rel="noopener noreferrer">
+            View Google Scholar &rarr;
+          </a>
+        </div>
         <div className="patents-grid">
           <div className="patent-card">
+            <span className="patent-year">2015</span>
             <h3>Method and system for facilitating replacement of system calls</h3>
-            <p className="patent-meta">US Patent 9,111,087 (2015)</p>
-            <p className="citations">67 citations</p>
-            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+            <p className="patent-id">US Patent 9,111,087</p>
+            <p className="patent-citations">67 citations</p>
           </div>
 
           <div className="patent-card">
+            <span className="patent-year">2010</span>
             <h3>System and method for acquiring data from an aircraft</h3>
-            <p className="patent-meta">US Patent App. 12/234,211 (2010)</p>
-            <p className="citations">45 citations</p>
-            <p className="authors">SP Eagleton, B Somasundram, S Bonkra, R Pynadath, M Jawa, ...</p>
+            <p className="patent-id">US Patent App. 12/234,211</p>
+            <p className="patent-citations">45 citations</p>
           </div>
 
           <div className="patent-card">
+            <span className="patent-year">2016</span>
             <h3>Method and system for identifying and replacing system calls</h3>
-            <p className="patent-meta">US Patent 9,524,154 (2016)</p>
-            <p className="citations">38 citations</p>
-            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+            <p className="patent-id">US Patent 9,524,154</p>
+            <p className="patent-citations">38 citations</p>
           </div>
 
           <div className="patent-card">
+            <span className="patent-year">2018</span>
             <h3>Method and system for facilitating replacement of system calls</h3>
-            <p className="patent-meta">US Patent 10,007,782 (2018)</p>
-            <p className="citations">10 citations</p>
-            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+            <p className="patent-id">US Patent 10,007,782</p>
+            <p className="patent-citations">10 citations</p>
           </div>
 
           <div className="patent-card">
-            <h3>Static redirection for objective C</h3>
-            <p className="patent-meta">US Patent 9,189,622 (2015)</p>
-            <p className="citations">4 citations</p>
-            <p className="authors">M Jawa</p>
+            <span className="patent-year">2015</span>
+            <h3>Static redirection for Objective-C</h3>
+            <p className="patent-id">US Patent 9,189,622</p>
+            <p className="patent-citations">4 citations</p>
           </div>
 
           <div className="patent-card">
+            <span className="patent-year">2020</span>
             <h3>Method and system for facilitating replacement of function calls</h3>
-            <p className="patent-meta">US Patent 10,725,756 (2020)</p>
-            <p className="authors">M Jawa, H Tebeka, C Newell</p>
+            <p className="patent-id">US Patent 10,725,756</p>
           </div>
 
           <div className="patent-card">
-            <h3>Static redirection for objective C</h3>
-            <p className="patent-meta">US Patent 10,114,979 (2018)</p>
-            <p className="authors">M Jawa</p>
+            <span className="patent-year">2018</span>
+            <h3>Static redirection for Objective-C</h3>
+            <p className="patent-id">US Patent 10,114,979</p>
           </div>
 
           <div className="patent-card">
+            <span className="patent-year">2017</span>
             <h3>Method and system for facilitating replacement of system calls</h3>
-            <p className="patent-meta">US Patent 9,665,355 (2017)</p>
-            <p className="authors">M Jawa, H Tebeka, CF Newell</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Expertise */}
-      <section className="expertise">
-        <h2>Expertise</h2>
-        <div className="expertise-grid">
-          <div className="expertise-card">
-            <h3>Distributed Systems</h3>
-            <p>Microservices, high-availability platforms, scale</p>
-          </div>
-          <div className="expertise-card">
-            <h3>AI/ML</h3>
-            <p>Recommendation engines, ML platforms, generative AI</p>
-          </div>
-          <div className="expertise-card">
-            <h3>Engineering Leadership</h3>
-            <p>Team scaling, org building, strategic planning</p>
-          </div>
-          <div className="expertise-card">
-            <h3>Systems & Architecture</h3>
-            <p>OS fundamentals, mobile virtualization, security</p>
+            <p className="patent-id">US Patent 9,665,355</p>
           </div>
         </div>
       </section>
 
       {/* Contact */}
       <section id="contact" className="contact">
-        <h2>Let's Connect</h2>
-        <p>Open to discussing engineering leadership and building great teams.</p>
-        <div className="contact-links">
-          <a href="mailto:jawa.manish@gmail.com" className="contact-btn">📧 Email</a>
-          <a href="https://linkedin.com/in/manishjawa" className="contact-btn" target="_blank">💼 LinkedIn</a>
+        <div className="contact-inner">
+          <h2>Let&rsquo;s Connect</h2>
+          <p className="contact-desc">
+            Interested in discussing engineering leadership, AI/ML strategy, or building great teams?
+            I&rsquo;d love to hear from you.
+          </p>
+          <div className="contact-actions">
+            <BookingModal />
+            <a href="mailto:jawa.manish@gmail.com" className="btn btn-secondary">Email Me</a>
+            <a href="https://linkedin.com/in/manishjawa" className="btn btn-secondary" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="footer">
-        <p>© 2026 Manish Jawa</p>
+        <p>&copy; 2026 Manish Jawa. Built with purpose.</p>
       </footer>
     </div>
   )

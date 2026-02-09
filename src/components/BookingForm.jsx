@@ -17,6 +17,7 @@ export default function BookingForm() {
     try {
       await createBooking(email, context);
       setSuccess(true);
+      setLoading(false);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setLoading(false);

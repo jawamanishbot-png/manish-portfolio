@@ -17,7 +17,7 @@ const getApiBase = () => {
 const API_BASE = getApiBase();
 
 /**
- * Create a booking and get Stripe Checkout Session URL
+ * Create a booking request
  */
 export const createBooking = async (email, context) => {
   const res = await fetch(`${API_BASE}/api/bookings/create`, {
