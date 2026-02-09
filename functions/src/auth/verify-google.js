@@ -23,13 +23,20 @@ export const verifyGoogle = async (req, res) => {
     // Verify the token with Google
     let ticket;
     try {
+      console.log('Verifying token...');
+      console.log('Credential length:', credential.length);
+      console.log('Client ID:', GOOGLE_CLIENT_ID);
+      
       ticket = await client.verifyIdToken({
         idToken: credential,
         audience: GOOGLE_CLIENT_ID,
       });
+      console.log('Token verified successfully');
     } catch (error) {
-      console.error('Token verification failed:', error);
-      return res.status(401).json({ error: 'Invalid token' });
+      console.error('Token verification failed:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Full error:', JSON.stringify(error));
+      return res.status(401).json({ error: `Invalid token: ${error.message}` });
     }
 
     const payload = ticket.getPayload();
