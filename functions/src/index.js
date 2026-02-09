@@ -15,6 +15,7 @@ import { createBooking } from './bookings/create.js';
 import { approveBooking } from './bookings/approve.js';
 import { rejectBooking } from './bookings/reject.js';
 import { listBookings } from './bookings/list.js';
+import { verifyGoogle } from './auth/verify-google.js';
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.post('/api/bookings/create', createBooking);
 app.get('/api/bookings/list', listBookings);
 app.post('/api/bookings/approve', approveBooking);
 app.post('/api/bookings/reject', rejectBooking);
+app.post('/api/auth/verify-google', verifyGoogle);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
