@@ -16,6 +16,8 @@ import { approveBooking } from './bookings/approve.js';
 import { rejectBooking } from './bookings/reject.js';
 import { listBookings } from './bookings/list.js';
 import { verifyGoogle } from './auth/verify-google.js';
+import { trackEvent } from './analytics/track.js';
+import { analyticsSummary } from './analytics/summary.js';
 
 const app = express();
 
@@ -27,6 +29,8 @@ app.get('/api/bookings/list', listBookings);
 app.post('/api/bookings/approve', approveBooking);
 app.post('/api/bookings/reject', rejectBooking);
 app.post('/api/auth/verify-google', verifyGoogle);
+app.post('/api/analytics/track', trackEvent);
+app.get('/api/analytics/summary', analyticsSummary);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

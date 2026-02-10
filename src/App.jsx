@@ -1,11 +1,17 @@
+import { useEffect } from 'react'
 import './App.css'
 import BookingModal from './components/BookingModal'
+import { trackPageView, trackClick } from './services/analytics'
 
 export default function App() {
   return <MainPage />
 }
 
 function MainPage() {
+  useEffect(() => {
+    trackPageView()
+  }, [])
+
   return (
     <div className="app">
       {/* Navigation */}
@@ -34,7 +40,7 @@ function MainPage() {
           </p>
           <div className="hero-cta">
             <BookingModal />
-            <a href="https://linkedin.com/in/manishjawa" className="btn btn-secondary" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://linkedin.com/in/manishjawa" className="btn btn-secondary" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('hero_linkedin')}>LinkedIn</a>
           </div>
         </div>
       </header>
@@ -236,8 +242,8 @@ function MainPage() {
           </p>
           <div className="contact-actions">
             <BookingModal />
-            <a href="mailto:jawa.manish@gmail.com" className="btn btn-secondary">Email Me</a>
-            <a href="https://linkedin.com/in/manishjawa" className="btn btn-secondary" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="mailto:jawa.manish@gmail.com" className="btn btn-secondary" onClick={() => trackClick('contact_email')}>Email Me</a>
+            <a href="https://linkedin.com/in/manishjawa" className="btn btn-secondary" target="_blank" rel="noopener noreferrer" onClick={() => trackClick('contact_linkedin')}>LinkedIn</a>
           </div>
         </div>
       </section>
