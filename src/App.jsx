@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import './App.css'
 import BookingModal from './components/BookingModal'
 import { trackPageView, trackClick } from './services/analytics'
+import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
   return <MainPage />
@@ -252,6 +253,7 @@ function MainPage() {
       <footer className="footer">
         <p>&copy; 2026 Manish Jawa. Built with purpose.</p>
       </footer>
+      <Analytics />
     </div>
   )
 }
