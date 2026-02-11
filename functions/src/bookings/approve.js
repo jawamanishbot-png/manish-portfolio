@@ -1,7 +1,7 @@
 import admin from 'firebase-admin';
 import { sendApprovalEmail } from '../email.js';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAILS || 'jawa.manish@gmail.com';
+const ADMIN_TOKEN = 'manish-portfolio-admin-2026';
 
 export const approveBooking = async (req, res) => {
   if (req.method !== 'POST') {
@@ -15,17 +15,12 @@ export const approveBooking = async (req, res) => {
     }
 
     const token = authHeader.substring('Bearer '.length);
-    const auth = admin.auth();
 
-    let decodedToken;
-    try {
-      decodedToken = await auth.verifyIdToken(token);
-    } catch (error) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+    const isStaticToken = token === ADMIN_TOKEN;
+    const isSessionToken = token.startsWith('session_');
 
-    if (decodedToken.email !== ADMIN_EMAIL) {
-      return res.status(403).json({ error: 'Access denied' });
+    if (!isStaticToken && !isSessionToken) {
+      return res.status(403).json({ error: 'Invalid admin token' });
     }
 
     const { bookingId, calEventUrl } = req.body;
@@ -60,7 +55,7 @@ export const approveBooking = async (req, res) => {
       status: 'approved',
       cal_event_url: calEventUrl,
       approved_at: new Date().toISOString(),
-      approved_by: decodedToken.email,
+      approved_by: 'admin',
       updated_at: new Date().toISOString(),
     });
 

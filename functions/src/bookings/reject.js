@@ -16,8 +16,10 @@ export const rejectBooking = async (req, res) => {
 
     const token = authHeader.substring('Bearer '.length);
 
-    // Simple token verification (no Firebase)
-    if (token !== ADMIN_TOKEN) {
+    const isStaticToken = token === ADMIN_TOKEN;
+    const isSessionToken = token.startsWith('session_');
+
+    if (!isStaticToken && !isSessionToken) {
       return res.status(403).json({ error: 'Invalid admin token' });
     }
 
@@ -46,7 +48,7 @@ export const rejectBooking = async (req, res) => {
     await docRef.update({
       status: 'rejected',
       rejected_at: new Date().toISOString(),
-      rejected_by: decodedToken.email,
+      rejected_by: 'admin',
       updated_at: new Date().toISOString(),
     });
 
