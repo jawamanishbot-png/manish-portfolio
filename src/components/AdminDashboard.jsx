@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getBookings, approveBooking, rejectBooking } from '../services/api';
+import { getBookings, approveBooking, rejectBooking, createCalendarEvent, createPaymentLink } from '../services/api';
 import { getAnalytics } from '../services/analytics';
 import './AdminDashboard.css';
 
@@ -10,10 +10,19 @@ export default function AdminDashboard({ onLogout }) {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('pending');
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [calEventUrl, setCalEventUrl] = useState('');
   const [tab, setTab] = useState('bookings');
   const [analytics, setAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  // Approval modal state
+  const [approvalStep, setApprovalStep] = useState('options'); // options | scheduling | processing
+  const [meetDate, setMeetDate] = useState('');
+  const [meetTime, setMeetTime] = useState('10:00');
+  const [meetDuration, setMeetDuration] = useState(25);
+  const [includePayment, setIncludePayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [calendarResult, setCalendarResult] = useState(null);
+  const [approving, setApproving] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem('adminEmail') || 'Admin';
@@ -25,14 +34,15 @@ export default function AdminDashboard({ onLogout }) {
     }
   }, []);
 
+  const getToken = () => localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
+
   const fetchAnalytics = async (token = null) => {
     try {
       setAnalyticsLoading(true);
-      const authToken = token || localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
-      const data = await getAnalytics(authToken);
+      const data = await getAnalytics(token || getToken());
       setAnalytics(data);
     } catch {
-      // Analytics errors are non-critical
+      // Non-critical
     } finally {
       setAnalyticsLoading(false);
     }
@@ -41,8 +51,7 @@ export default function AdminDashboard({ onLogout }) {
   const fetchBookings = async (token = null) => {
     try {
       setLoading(true);
-      const authToken = token || localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
-      const data = await getBookings(authToken);
+      const data = await getBookings(token || getToken());
       setBookings(data.bookings || []);
     } catch (err) {
       setError(`Failed to load bookings: ${err.message}`);
@@ -57,33 +66,89 @@ export default function AdminDashboard({ onLogout }) {
     onLogout?.();
   };
 
-  const handleApprove = async (booking) => {
-    if (!calEventUrl.trim()) {
-      alert('Please enter the Cal.com event URL');
+  const openApprovalModal = (booking) => {
+    setSelectedBooking(booking);
+    setApprovalStep('options');
+    setMeetDate('');
+    setMeetTime('10:00');
+    setMeetDuration(25);
+    setIncludePayment(false);
+    setPaymentAmount('');
+    setCalendarResult(null);
+  };
+
+  const closeModal = () => {
+    setSelectedBooking(null);
+    setApprovalStep('options');
+    setCalendarResult(null);
+  };
+
+  const handleScheduleMeeting = async () => {
+    if (!meetDate || !meetTime) {
+      alert('Please select a date and time');
       return;
     }
 
     try {
-      const token = localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
-      await approveBooking(token, booking.id, calEventUrl);
-      alert('Booking approved! User will receive the Cal.com link via email.');
-      setSelectedBooking(null);
-      setCalEventUrl('');
+      setApprovalStep('processing');
+      const result = await createCalendarEvent(getToken(), {
+        attendeeEmail: selectedBooking.email,
+        topic: selectedBooking.context,
+        date: meetDate,
+        startTime: meetTime,
+        durationMinutes: meetDuration,
+      });
+      setCalendarResult(result);
+      setApprovalStep('options');
+    } catch (err) {
+      alert(`Failed to create calendar event: ${err.message}`);
+      setApprovalStep('scheduling');
+    }
+  };
+
+  const handleApprove = async () => {
+    try {
+      setApproving(true);
+      const token = getToken();
+      const approvalData = {
+        bookingId: selectedBooking.id,
+        meetLink: calendarResult?.meetLink || null,
+        eventLink: calendarResult?.eventLink || null,
+      };
+
+      // Create payment link if requested
+      if (includePayment && paymentAmount && parseFloat(paymentAmount) > 0) {
+        try {
+          const paymentResult = await createPaymentLink(token, {
+            amount: parseFloat(paymentAmount),
+            bookingId: selectedBooking.id,
+            attendeeEmail: selectedBooking.email,
+            topic: selectedBooking.context,
+          });
+          approvalData.paymentUrl = paymentResult.paymentUrl;
+          approvalData.paymentAmount = parseFloat(paymentAmount);
+        } catch (err) {
+          alert(`Failed to create payment link: ${err.message}`);
+          setApproving(false);
+          return;
+        }
+      }
+
+      await approveBooking(token, approvalData);
+      closeModal();
       await fetchBookings(token);
     } catch (err) {
       alert(`Failed to approve booking: ${err.message}`);
+    } finally {
+      setApproving(false);
     }
   };
 
   const handleReject = async (booking) => {
-    if (!confirm(`Reject booking from ${booking.email}?`)) {
-      return;
-    }
-
+    if (!confirm(`Reject booking from ${booking.email}?`)) return;
     try {
-      const token = localStorage.getItem('adminToken') || 'manish-portfolio-admin-2026';
+      const token = getToken();
       await rejectBooking(token, booking.id);
-      alert('Booking rejected.');
       await fetchBookings(token);
     } catch (err) {
       alert(`Failed to reject booking: ${err.message}`);
@@ -102,10 +167,14 @@ export default function AdminDashboard({ onLogout }) {
     return b.status === filter;
   });
 
-  // Find the max daily view count for chart scaling
   const maxDailyView = analytics?.dailyViews
     ? Math.max(...analytics.dailyViews.map((d) => d.count), 1)
     : 1;
+
+  // Get tomorrow's date as min for date picker
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().split('T')[0];
 
   return (
     <div className="admin-container">
@@ -139,17 +208,14 @@ export default function AdminDashboard({ onLogout }) {
       {tab === 'analytics' && (
         <div className="admin-inner">
           {analyticsLoading && <p className="loading-state">Loading analytics...</p>}
-
           {!analyticsLoading && !analytics && (
             <div className="empty-state">
               <div className="empty-icon">~</div>
               <p>No analytics data yet</p>
             </div>
           )}
-
           {analytics && (
             <>
-              {/* Overview Stats */}
               <div className="analytics-grid">
                 <div className="analytics-card">
                   <div className="analytics-card-value">{analytics.views.today}</div>
@@ -168,8 +234,6 @@ export default function AdminDashboard({ onLogout }) {
                   <div className="analytics-card-label">Visitors This Week</div>
                 </div>
               </div>
-
-              {/* Daily Views Chart */}
               <div className="analytics-section">
                 <h3 className="analytics-section-title">Last 7 Days</h3>
                 <div className="analytics-chart">
@@ -177,18 +241,13 @@ export default function AdminDashboard({ onLogout }) {
                     <div key={day.date} className="chart-bar-group">
                       <span className="chart-bar-value">{day.count}</span>
                       <div className="chart-bar-track">
-                        <div
-                          className="chart-bar-fill"
-                          style={{ height: `${(day.count / maxDailyView) * 100}%` }}
-                        />
+                        <div className="chart-bar-fill" style={{ height: `${(day.count / maxDailyView) * 100}%` }} />
                       </div>
                       <span className="chart-bar-label">{day.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Two-column: Devices + Referrers */}
               <div className="analytics-two-col">
                 <div className="analytics-section">
                   <h3 className="analytics-section-title">Devices</h3>
@@ -196,30 +255,19 @@ export default function AdminDashboard({ onLogout }) {
                     <div className="device-row">
                       <span className="device-label">Desktop</span>
                       <div className="device-bar-track">
-                        <div
-                          className="device-bar-fill"
-                          style={{
-                            width: `${((analytics.devices.desktop / (analytics.views.month || 1)) * 100)}%`,
-                          }}
-                        />
+                        <div className="device-bar-fill" style={{ width: `${((analytics.devices.desktop / (analytics.views.month || 1)) * 100)}%` }} />
                       </div>
                       <span className="device-count">{analytics.devices.desktop}</span>
                     </div>
                     <div className="device-row">
                       <span className="device-label">Mobile</span>
                       <div className="device-bar-track">
-                        <div
-                          className="device-bar-fill mobile"
-                          style={{
-                            width: `${((analytics.devices.mobile / (analytics.views.month || 1)) * 100)}%`,
-                          }}
-                        />
+                        <div className="device-bar-fill mobile" style={{ width: `${((analytics.devices.mobile / (analytics.views.month || 1)) * 100)}%` }} />
                       </div>
                       <span className="device-count">{analytics.devices.mobile}</span>
                     </div>
                   </div>
                 </div>
-
                 <div className="analytics-section">
                   <h3 className="analytics-section-title">Top Sources</h3>
                   {analytics.topReferrers.length === 0 ? (
@@ -236,8 +284,6 @@ export default function AdminDashboard({ onLogout }) {
                   )}
                 </div>
               </div>
-
-              {/* Top Clicks */}
               {analytics.topClicks.length > 0 && (
                 <div className="analytics-section">
                   <h3 className="analytics-section-title">Button Clicks</h3>
@@ -251,8 +297,6 @@ export default function AdminDashboard({ onLogout }) {
                   </div>
                 </div>
               )}
-
-              {/* 30-day total */}
               <div className="analytics-footer">
                 <span>30-day totals: {analytics.views.month} views from {analytics.visitors.month} visitors</span>
               </div>
@@ -264,59 +308,34 @@ export default function AdminDashboard({ onLogout }) {
       {/* Bookings Tab */}
       {tab === 'bookings' && (
         <div className="admin-inner">
-          {/* Stats / Filter Row */}
           <div className="stats-row">
-            <div
-              className={`stat-item ${filter === 'pending' ? 'active' : ''}`}
-              onClick={() => setFilter('pending')}
-            >
-              <div className="stat-count">{counts.pending}</div>
-              <div className="stat-label">Pending</div>
-            </div>
-            <div
-              className={`stat-item ${filter === 'approved' ? 'active' : ''}`}
-              onClick={() => setFilter('approved')}
-            >
-              <div className="stat-count">{counts.approved}</div>
-              <div className="stat-label">Approved</div>
-            </div>
-            <div
-              className={`stat-item ${filter === 'rejected' ? 'active' : ''}`}
-              onClick={() => setFilter('rejected')}
-            >
-              <div className="stat-count">{counts.rejected}</div>
-              <div className="stat-label">Rejected</div>
-            </div>
-            <div
-              className={`stat-item ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              <div className="stat-count">{counts.all}</div>
-              <div className="stat-label">Total</div>
-            </div>
+            {['pending', 'approved', 'rejected', 'all'].map((key) => (
+              <div
+                key={key}
+                className={`stat-item ${filter === key ? 'active' : ''}`}
+                onClick={() => setFilter(key)}
+              >
+                <div className="stat-count">{counts[key]}</div>
+                <div className="stat-label">{key === 'all' ? 'Total' : key}</div>
+              </div>
+            ))}
           </div>
 
-          {/* Error */}
           {error && (
             <div className="error-banner">
               <strong>Error</strong> {error}
             </div>
           )}
 
-          {/* Loading */}
           {loading && <p className="loading-state">Loading bookings...</p>}
 
-          {/* Empty State */}
           {!loading && filteredBookings.length === 0 && (
             <div className="empty-state">
-              <div className="empty-icon">
-                {filter === 'pending' ? '~' : filter === 'approved' ? '+' : filter === 'rejected' ? '-' : '*'}
-              </div>
+              <div className="empty-icon">~</div>
               <p>No {filter === 'all' ? '' : filter} bookings yet</p>
             </div>
           )}
 
-          {/* Bookings List */}
           {filteredBookings.length > 0 && (
             <div className="bookings-list">
               {filteredBookings.map((booking) => (
@@ -335,41 +354,48 @@ export default function AdminDashboard({ onLogout }) {
                     </p>
                     <p className="booking-meta">
                       {new Date(booking.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}{' '}
-                      at{' '}
+                        month: 'short', day: 'numeric', year: 'numeric',
+                      })}{' '}at{' '}
                       {new Date(booking.created_at).toLocaleTimeString('en-US', {
-                        hour: 'numeric',
-                        minute: '2-digit',
+                        hour: 'numeric', minute: '2-digit',
                       })}
                     </p>
                   </div>
 
                   {booking.status === 'pending' && (
                     <div className="booking-card-actions">
-                      <button
-                        className="btn-approve"
-                        onClick={() => setSelectedBooking(booking)}
-                      >
+                      <button className="btn-approve" onClick={() => openApprovalModal(booking)}>
                         Approve
                       </button>
-                      <button
-                        className="btn-reject"
-                        onClick={() => handleReject(booking)}
-                      >
+                      <button className="btn-reject" onClick={() => handleReject(booking)}>
                         Reject
                       </button>
                     </div>
                   )}
 
-                  {booking.status === 'approved' && (booking.cal_event_url || booking.cal_link) && (
-                    <p className="booking-cal-link">
-                      <a href={booking.cal_event_url || booking.cal_link} target="_blank" rel="noopener noreferrer">
-                        View Cal.com link
-                      </a>
-                    </p>
+                  {booking.status === 'approved' && (
+                    <div className="booking-approved-info">
+                      {booking.meet_link && (
+                        <a href={booking.meet_link} target="_blank" rel="noopener noreferrer" className="approved-link meet">
+                          Google Meet
+                        </a>
+                      )}
+                      {booking.event_link && (
+                        <a href={booking.event_link} target="_blank" rel="noopener noreferrer" className="approved-link calendar">
+                          Calendar Event
+                        </a>
+                      )}
+                      {booking.payment_url && (
+                        <a href={booking.payment_url} target="_blank" rel="noopener noreferrer" className="approved-link payment">
+                          Payment (${booking.payment_amount})
+                        </a>
+                      )}
+                      {(booking.cal_event_url || booking.cal_link) && !booking.meet_link && (
+                        <a href={booking.cal_event_url || booking.cal_link} target="_blank" rel="noopener noreferrer" className="approved-link calendar">
+                          Cal.com link
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
@@ -380,50 +406,166 @@ export default function AdminDashboard({ onLogout }) {
 
       {/* Approval Modal */}
       {selectedBooking && (
-        <div className="modal-overlay" onClick={() => setSelectedBooking(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content modal-wide" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Approve Booking</h2>
-              <button
-                className="modal-close"
-                onClick={() => setSelectedBooking(null)}
-              >
-                x
-              </button>
+              <button className="modal-close" onClick={closeModal}>x</button>
             </div>
+
             <div className="modal-body">
-              <div className="modal-detail">
-                <span className="modal-detail-label">Email</span>
-                <span className="modal-detail-value">{selectedBooking.email}</span>
-              </div>
-              <div className="modal-detail">
-                <span className="modal-detail-label">Topic</span>
-                <span className="modal-detail-value">{selectedBooking.context}</span>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="calEventUrl">Cal.com Event URL</label>
-                <input
-                  id="calEventUrl"
-                  type="url"
-                  value={calEventUrl}
-                  onChange={(e) => setCalEventUrl(e.target.value)}
-                  placeholder="https://cal.com/manish/consultation"
-                  required
-                />
-                <small>
-                  The user will receive this link via email to schedule their time slot.
-                </small>
+              {/* Booking Info */}
+              <div className="modal-detail-row">
+                <div className="modal-detail">
+                  <span className="modal-detail-label">Email</span>
+                  <span className="modal-detail-value">{selectedBooking.email}</span>
+                </div>
+                <div className="modal-detail">
+                  <span className="modal-detail-label">Topic</span>
+                  <span className="modal-detail-value">{selectedBooking.context}</span>
+                </div>
               </div>
 
-              <div className="modal-actions">
-                <button className="btn-primary" onClick={() => handleApprove(selectedBooking)}>
-                  Send Approval
-                </button>
-                <button className="btn-cancel" onClick={() => setSelectedBooking(null)}>
-                  Cancel
-                </button>
-              </div>
+              {/* Processing State */}
+              {approvalStep === 'processing' && (
+                <div className="processing-state">
+                  <div className="spinner" />
+                  <p>Creating calendar event...</p>
+                </div>
+              )}
+
+              {/* Scheduling Section */}
+              {approvalStep === 'scheduling' && (
+                <div className="schedule-section">
+                  <h3 className="section-heading">Schedule Meeting</h3>
+                  <div className="schedule-form">
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Date</label>
+                        <input
+                          type="date"
+                          value={meetDate}
+                          min={minDate}
+                          onChange={(e) => setMeetDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Time</label>
+                        <input
+                          type="time"
+                          value={meetTime}
+                          onChange={(e) => setMeetTime(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Duration</label>
+                        <select value={meetDuration} onChange={(e) => setMeetDuration(Number(e.target.value))}>
+                          <option value={15}>15 min</option>
+                          <option value={25}>25 min</option>
+                          <option value={30}>30 min</option>
+                          <option value={45}>45 min</option>
+                          <option value={60}>60 min</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="schedule-actions">
+                      <button className="btn-primary" onClick={handleScheduleMeeting}>
+                        Create Event
+                      </button>
+                      <button className="btn-cancel" onClick={() => setApprovalStep('options')}>
+                        Back
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Options (main view) */}
+              {approvalStep === 'options' && (
+                <>
+                  {/* Calendar Card */}
+                  <div className={`option-card ${calendarResult ? 'done' : ''}`}>
+                    <div className="option-card-header">
+                      <div>
+                        <h3 className="option-title">Google Calendar + Meet</h3>
+                        <p className="option-desc">
+                          {calendarResult
+                            ? 'Meeting scheduled — invite sent to attendee'
+                            : 'Schedule a meeting and auto-generate a Google Meet link'
+                          }
+                        </p>
+                      </div>
+                      {calendarResult ? (
+                        <span className="option-done-badge">Scheduled</span>
+                      ) : (
+                        <button className="btn-option" onClick={() => setApprovalStep('scheduling')}>
+                          Schedule
+                        </button>
+                      )}
+                    </div>
+                    {calendarResult && (
+                      <div className="option-result">
+                        {calendarResult.meetLink && (
+                          <a href={calendarResult.meetLink} target="_blank" rel="noopener noreferrer" className="result-link">
+                            Meet link
+                          </a>
+                        )}
+                        {calendarResult.eventLink && (
+                          <a href={calendarResult.eventLink} target="_blank" rel="noopener noreferrer" className="result-link">
+                            Calendar event
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Payment Card */}
+                  <div className={`option-card ${includePayment ? 'active' : ''}`}>
+                    <div className="option-card-header">
+                      <div>
+                        <h3 className="option-title">Stripe Payment</h3>
+                        <p className="option-desc">Optionally require payment before the consultation</p>
+                      </div>
+                      <label className="toggle">
+                        <input
+                          type="checkbox"
+                          checked={includePayment}
+                          onChange={(e) => setIncludePayment(e.target.checked)}
+                        />
+                        <span className="toggle-slider" />
+                      </label>
+                    </div>
+                    {includePayment && (
+                      <div className="payment-input">
+                        <span className="currency-prefix">$</span>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          placeholder="150"
+                        />
+                        <span className="currency-suffix">USD</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Approve Button */}
+                  <div className="modal-actions">
+                    <button
+                      className="btn-primary"
+                      onClick={handleApprove}
+                      disabled={approving || (includePayment && (!paymentAmount || parseFloat(paymentAmount) <= 0))}
+                    >
+                      {approving ? 'Approving...' : 'Send Approval'}
+                    </button>
+                    <button className="btn-cancel" onClick={closeModal}>
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
