@@ -18,6 +18,8 @@ import { listBookings } from './bookings/list.js';
 import { verifyGoogle } from './auth/verify-google.js';
 import { trackEvent } from './analytics/track.js';
 import { analyticsSummary } from './analytics/summary.js';
+import { createCalendarEvent } from './calendar/create-event.js';
+import { createPaymentLink } from './stripe/create-payment-link.js';
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.post('/api/bookings/reject', rejectBooking);
 app.post('/api/auth/verify-google', verifyGoogle);
 app.post('/api/analytics/track', trackEvent);
 app.get('/api/analytics/summary', analyticsSummary);
+app.post('/api/calendar/create-event', createCalendarEvent);
+app.post('/api/stripe/create-payment-link', createPaymentLink);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

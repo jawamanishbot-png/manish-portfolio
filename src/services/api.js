@@ -1,20 +1,18 @@
 // Determine API base URL
-// In production (Firebase Hosting), use relative paths which are rewritten to Cloud Functions
-// In development with emulator, use http://localhost:5001/project-id/us-central1/api
-// In development without emulator, use relative paths which are served by Vite
 const getApiBase = () => {
   const env = import.meta.env;
-  
-  // Check if we're in development with Firebase emulator
   if (env.VITE_USE_EMULATOR === 'true' && typeof window !== 'undefined') {
     return `http://localhost:5001/${env.VITE_FIREBASE_PROJECT_ID}/us-central1`;
   }
-  
-  // Otherwise use relative paths (works for Firebase Hosting and Vite dev server)
   return '';
 };
 
 const API_BASE = getApiBase();
+
+const authHeaders = (token) => ({
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json',
+});
 
 /**
  * Create a booking request
@@ -25,9 +23,7 @@ export const createBooking = async (email, context) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, context }),
   });
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
@@ -37,32 +33,22 @@ export const createBooking = async (email, context) => {
 export const getBookings = async (token) => {
   const res = await fetch(`${API_BASE}/api/bookings/list`, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: authHeaders(token),
   });
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
 /**
- * Approve a booking and send user Cal.com link
+ * Approve a booking with optional calendar event and payment link
  */
-export const approveBooking = async (token, bookingId, calEventUrl) => {
+export const approveBooking = async (token, data) => {
   const res = await fetch(`${API_BASE}/api/bookings/approve`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ bookingId, calEventUrl }),
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
   });
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
@@ -72,14 +58,35 @@ export const approveBooking = async (token, bookingId, calEventUrl) => {
 export const rejectBooking = async (token, bookingId) => {
   const res = await fetch(`${API_BASE}/api/bookings/reject`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: authHeaders(token),
     body: JSON.stringify({ bookingId }),
   });
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+/**
+ * Create a Google Calendar event with Meet link
+ */
+export const createCalendarEvent = async (token, data) => {
+  const res = await fetch(`${API_BASE}/api/calendar/create-event`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+/**
+ * Create a Stripe payment link
+ */
+export const createPaymentLink = async (token, data) => {
+  const res = await fetch(`${API_BASE}/api/stripe/create-payment-link`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };

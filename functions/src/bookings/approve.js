@@ -23,16 +23,10 @@ export const approveBooking = async (req, res) => {
       return res.status(403).json({ error: 'Invalid admin token' });
     }
 
-    const { bookingId, calEventUrl } = req.body;
+    const { bookingId, meetLink, eventLink, paymentUrl, paymentAmount } = req.body;
 
-    if (!bookingId || !calEventUrl) {
-      return res.status(400).json({ error: 'Missing bookingId or calEventUrl' });
-    }
-
-    try {
-      new URL(calEventUrl);
-    } catch {
-      return res.status(400).json({ error: 'Invalid URL format' });
+    if (!bookingId) {
+      return res.status(400).json({ error: 'Missing bookingId' });
     }
 
     const db = admin.firestore();
@@ -46,18 +40,33 @@ export const approveBooking = async (req, res) => {
     const booking = doc.data();
 
     try {
-      await sendApprovalEmail(booking.email, calEventUrl);
+      await sendApprovalEmail(booking.email, {
+        meetLink,
+        eventLink,
+        paymentUrl,
+        paymentAmount,
+        topic: booking.context,
+      });
     } catch (emailError) {
       console.error('Email send failed, but continuing:', emailError);
     }
 
-    await docRef.update({
+    const updateData = {
       status: 'approved',
-      cal_event_url: calEventUrl,
       approved_at: new Date().toISOString(),
       approved_by: 'admin',
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    if (meetLink) updateData.meet_link = meetLink;
+    if (eventLink) updateData.event_link = eventLink;
+    if (paymentUrl) {
+      updateData.payment_url = paymentUrl;
+      updateData.payment_amount = paymentAmount;
+      updateData.payment_status = 'pending';
+    }
+
+    await docRef.update(updateData);
 
     return res.status(200).json({ success: true, message: 'Booking approved and email sent' });
   } catch (error) {
